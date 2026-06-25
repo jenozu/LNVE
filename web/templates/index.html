@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+{% block title %}Search{% endblock %}
+
+{% block content %}
+<h1 class="mb-4"><i class="fas fa-search me-2 text-primary"></i>New Search</h1>
+
+<div class="row g-4">
+    <div class="col-lg-7">
+        <div class="card">
+            <div class="card-header py-3">
+                <i class="fas fa-filter me-2"></i>Search Parameters
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('search.start_search') }}">
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Business Type</label>
+                        <select class="form-select" name="search_type" required>
+                            <option value="">Select a type…</option>
+                            {% for value, label in search_types %}
+                            <option value="{{ value }}">{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                        <div class="form-text">
+                            Or type your own keyword in the box below ↓
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Custom Keyword <span class="text-muted">(overrides dropdown)</span></label>
+                        <input type="text" class="form-control" name="custom_type"
+                               placeholder="e.g. epoxy garage floors, deck builder…">
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Location</label>
+                        <input type="text" class="form-control" name="location_name"
+                               value="Hamilton, ON" required
+                               placeholder="City name, address, or lat,lng">
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Radius (km)</label>
+                        <input type="number" class="form-control" name="radius"
+                               value="25" min="1" max="100" required>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label fw-semibold">Sources</label>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox"
+                                   name="sources" value="gmaps" id="srcGm" checked>
+                            <label class="form-check-label" for="srcGm">
+                                <i class="fab fa-google text-danger me-1"></i>Google Maps
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox"
+                                   name="sources" value="yellow_pages" id="srcYp" checked>
+                            <label class="form-check-label" for="srcYp">
+                                <i class="fas fa-book-open text-warning me-1"></i>Yellow Pages
+                            </label>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary btn-lg w-100">
+                        <i class="fas fa-play me-2"></i>Start Search
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-5">
+        <div class="row g-3">
+            <div class="col-12">
+                <div class="stat-card stat-blue">
+                    <i class="fas fa-filter fa-2x mb-2 opacity-75"></i>
+                    <h6>Smart Filtering</h6>
+                    <p class="mb-0 small opacity-75">
+                        Only collects businesses without websites — your highest-value leads.
+                    </p>
+                </div>
+            </div>
+            <div class="col-12">
+                <div class="stat-card stat-green">
+                    <i class="fas fa-database fa-2x mb-2 opacity-75"></i>
+                    <h6>Dual Sources</h6>
+                    <p class="mb-0 small opacity-75">
+                        Google Maps + Yellow Pages scraped simultaneously. Duplicates auto-removed.
+                    </p>
+                </div>
+            </div>
+            <div class="col-12">
+                <div class="stat-card stat-purple">
+                    <i class="fas fa-shield-alt fa-2x mb-2 opacity-75"></i>
+                    <h6>Rate Limited</h6>
+                    <p class="mb-0 small opacity-75">
+                        Built-in delays and proxy support keep your accounts safe.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

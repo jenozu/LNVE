@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}LNVE{% endblock %} — Lead Dashboard</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --sidebar-bg: linear-gradient(160deg, #1e3a5f 0%, #2d6a9f 100%);
+            --accent:     #2d6a9f;
+            --accent-lt:  #4facfe;
+        }
+        body { background: #f0f4f8; min-height: 100vh; }
+
+        /* Sidebar */
+        .sidebar {
+            min-height: 100vh;
+            background: var(--sidebar-bg);
+            color: #fff;
+            width: 220px;
+            position: fixed;
+            top: 0; left: 0; bottom: 0;
+            padding: 1.5rem 1rem;
+            z-index: 100;
+        }
+        .sidebar .brand { font-size: 1.1rem; font-weight: 700; margin-bottom: 2rem; }
+        .sidebar .nav-link {
+            color: rgba(255,255,255,.75);
+            border-radius: 8px;
+            padding: .5rem .75rem;
+            margin: 2px 0;
+            transition: all .2s;
+        }
+        .sidebar .nav-link:hover,
+        .sidebar .nav-link.active {
+            background: rgba(255,255,255,.18);
+            color: #fff;
+            transform: translateX(4px);
+        }
+        .sidebar .nav-link i { width: 20px; }
+
+        /* Main content */
+        .main { margin-left: 220px; padding: 2rem; }
+
+        /* Cards */
+        .card {
+            border: none;
+            border-radius: 12px;
+            box-shadow: 0 2px 12px rgba(0,0,0,.08);
+        }
+        .card-header {
+            background: none;
+            border-bottom: 1px solid rgba(0,0,0,.08);
+            font-weight: 600;
+        }
+
+        /* Status badges */
+        .status-running    { background:#fff3cd; color:#664d03; }
+        .status-completed  { background:#d1e7dd; color:#0a3622; }
+        .status-failed     { background:#f8d7da; color:#58151c; }
+        .status-pending    { background:#cfe2ff; color:#084298; }
+        .status-cancelled  { background:#e2e3e5; color:#41464b; }
+        .status-skipped    { background:#e2e3e5; color:#41464b; }
+        .status-badge      { font-size:.78rem; padding:3px 10px; border-radius:20px; font-weight:600; }
+
+        /* Pulse animation for running */
+        @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.6} }
+        .status-running { animation: pulse 2s infinite; }
+
+        /* Stat cards */
+        .stat-card { border-radius: 12px; color:#fff; padding: 1.25rem; }
+        .stat-blue   { background: linear-gradient(135deg,#1e3a5f,#2d6a9f); }
+        .stat-green  { background: linear-gradient(135deg,#1d7a4a,#28a862); }
+        .stat-orange { background: linear-gradient(135deg,#a05a00,#e07b00); }
+        .stat-purple { background: linear-gradient(135deg,#4a1d7a,#7b28c8); }
+    </style>
+    {% block extra_head %}{% endblock %}
+</head>
+<body>
+
+<!-- Sidebar -->
+<div class="sidebar">
+    <div class="brand">
+        <i class="fas fa-search-dollar me-2"></i>LNVE
+    </div>
+    <nav class="nav flex-column">
+        <a class="nav-link {% if request.endpoint == 'search.index' %}active{% endif %}"
+           href="{{ url_for('search.index') }}">
+            <i class="fas fa-search me-2"></i>Search
+        </a>
+        <a class="nav-link {% if request.endpoint == 'results.results' %}active{% endif %}"
+           href="{{ url_for('results.results') }}">
+            <i class="fas fa-list me-2"></i>Results
+        </a>
+        <a class="nav-link {% if request.endpoint == 'analytics.analytics' %}active{% endif %}"
+           href="{{ url_for('analytics.analytics') }}">
+            <i class="fas fa-chart-bar me-2"></i>Analytics
+        </a>
+    </nav>
+</div>
+
+<!-- Main -->
+<div class="main">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% for cat, msg in messages %}
+        <div class="alert alert-{{ cat }} alert-dismissible fade show" role="alert">
+          {{ msg }}
+          <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+      {% endfor %}
+    {% endwith %}
+
+    {% block content %}{% endblock %}
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+{% block extra_js %}{% endblock %}
+</body>
+</html>

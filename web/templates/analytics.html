@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+{% block title %}Analytics{% endblock %}
+
+{% block extra_head %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+{% endblock %}
+
+{% block content %}
+<h1 class="mb-4"><i class="fas fa-chart-bar me-2 text-primary"></i>Analytics</h1>
+
+<div class="row g-3 mb-4">
+    <div class="col-md-3">
+        <div class="stat-card stat-blue text-center">
+            <div class="fs-2 fw-bold">{{ stats.total_searches }}</div>
+            <div class="small opacity-75">Total Searches</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card stat-green text-center">
+            <div class="fs-2 fw-bold">{{ stats.total_leads }}</div>
+            <div class="small opacity-75">Total Leads</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card stat-orange text-center">
+            <div class="fs-2 fw-bold">{{ stats.enriched_count }}</div>
+            <div class="small opacity-75">Emails Found</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card stat-purple text-center">
+            <div class="fs-2 fw-bold">{{ stats.avg_leads_per_search }}</div>
+            <div class="small opacity-75">Avg Leads / Search</div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-md-4">
+        <div class="card h-100">
+            <div class="card-header py-3">Leads by Source</div>
+            <div class="card-body"><canvas id="sourceChart"></canvas></div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card h-100">
+            <div class="card-header py-3">Leads by Business Type</div>
+            <div class="card-body"><canvas id="typeChart"></canvas></div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card h-100">
+            <div class="card-header py-3">Enrichment Progress</div>
+            <div class="card-body"><canvas id="enrichChart"></canvas></div>
+        </div>
+    </div>
+</div>
+
+<div class="card mt-4">
+    <div class="card-header py-3">Searches Over Time (last 30 days)</div>
+    <div class="card-body"><canvas id="dateChart" height="80"></canvas></div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const COLORS = [
+    '#2d6a9f','#28a862','#e07b00','#7b28c8',
+    '#c82828','#289bc8','#c8a228','#289c5a',
+];
+
+function pie(id, labels, data) {
+    new Chart(document.getElementById(id), {
+        type: 'doughnut',
+        data: {labels, datasets:[{data, backgroundColor: COLORS}]},
+        options: {responsive:true, plugins:{legend:{position:'bottom'}}}
+    });
+}
+
+// Source chart
+pie('sourceChart',
+    {{ stats.by_source | map(attribute='source') | list | tojson }},
+    {{ stats.by_source | map(attribute='COUNT(*)') | list | tojson }}
+);
+
+// Type chart
+pie('typeChart',
+    {{ stats.by_type | map(attribute='search_type') | list | tojson }},
+    {{ stats.by_type | map(attribute='COUNT(l.id)') | list | tojson }}
+);
+
+// Enrichment doughnut
+pie('enrichChart',
+    ['Enriched','Pending'],
+    [{{ stats.enriched_count }}, {{ stats.unenriched_count }}]
+);
+
+// Date line chart
+new Chart(document.getElementById('dateChart'), {
+    type: 'line',
+    data: {
+        labels: {{ stats.by_date | map(attribute='date(created_at)') | list | tojson }},
+        datasets: [{
+            label: 'Searches',
+            data:  {{ stats.by_date | map(attribute='COUNT(*)') | list | tojson }},
+            borderColor: '#2d6a9f',
+            backgroundColor: 'rgba(45,106,159,.12)',
+            tension: 0.4,
+            fill: true,
+        }]
+    },
+    options: {
+        responsive:true,
+        scales:{y:{beginAtZero:true, ticks:{stepSize:1}}}
+    }
+});
+</script>
+{% endblock %}
