@@ -9,137 +9,109 @@ Keys are listed in priority order — **Required** ones must be set before the a
 
 This is what finds businesses. Without it the app won't start.
 
-**You already have one** (`AIzaSyAF2o41pCgmvCJVQaIwfXfp7-fHXDrpblM`) from your original script.
-Before using it, confirm two things in Google Cloud Console:
+**You likely already have one** from your original script.
+Before using it, confirm the right APIs are enabled:
 
 1. Go to **console.cloud.google.com**
 2. Sign in → select your project
-3. Go to **APIs & Services → Enabled APIs**
-4. Make sure both of these are enabled:
+3. Go to **APIs & Services → Library** and make sure these are enabled:
    - **Places API**
    - **Geocoding API**
-5. Go to **APIs & Services → Credentials** → click your key → confirm it isn't restricted to a domain or IP that would block it
+   - **Custom Search API** ← add this now, you'll need it for Step 2
 
-If the key is expired or restricted, create a new one:
-- **Credentials → Create Credentials → API Key**
-- Restrict it to "Places API" and "Geocoding API" only (good security practice)
+If you need a new key:
+- **APIs & Services → Credentials → Create Credentials → API Key**
 
-**Cost:** Places API charges ~$17 per 1,000 detail lookups. Google gives you $200/month free credit, which covers roughly 11,000 business detail calls. For normal use you won't pay anything.
-
----
-
-## 2. Bing Web Search API — REQUIRED for email enrichment
-
-This is how LNVE finds email addresses — it searches the web for each business's contact page.
-You need **at least one** of Bing or Google CSE. Bing is easier and cheaper to set up.
-
-**Steps:**
-
-1. Go to **portal.azure.com** and sign in (create a free Microsoft Azure account if you don't have one — no credit card required for free tier)
-2. Click **Create a resource** (the big + button)
-3. Search for **"Bing Search v7"**
-4. Click **Bing Search v7** → **Create**
-5. Fill in:
-   - **Subscription:** Free Trial (or your existing subscription)
-   - **Resource group:** Create new → name it `lnve`
-   - **Name:** anything, e.g. `lnve-bing`
-   - **Pricing tier:** Select **F1 (Free)** — 1,000 searches/month at no cost
-6. Click **Review + Create** → **Create**
-7. Once deployed, click **Go to resource**
-8. In the left sidebar click **Keys and Endpoint**
-9. Copy **Key 1**
-
-Paste it in your `.env`:
-```
-BING_V7_KEY=your_key_here
-```
-
-**Cost:** Free tier = 1,000 calls/month. Each lead enrichment uses ~1 search call.
-Paid tier (S1) = $7/1,000 calls if you need more.
+**Cost:** Places API charges ~$17 per 1,000 detail lookups.
+Google gives $200/month free credit — covers ~11,000 business lookups. Normal use = $0.
 
 ---
 
-## 3. Hunter.io API Key — OPTIONAL (email verification)
+## 2. Google Custom Search Engine — REQUIRED for email enrichment
 
-Hunter verifies that found emails actually exist and gives a confidence score.
+> **Note:** Bing Search v7 is retired. Google CSE is the replacement.
+
+This is how LNVE finds email addresses — it searches the web for each business's
+contact page. You need both a **CSE Key** and a **CX (engine) ID**.
+
+**Step A — Create the search engine (~2 min):**
+
+1. Go to **programmablesearchengine.google.com**
+2. Sign in with your Google account
+3. Tap/click **Get started** or **Add**
+4. Under "What to search" → select **Search the entire web**
+5. Name it `LNVE`
+6. Click **Create**
+7. On the confirmation page, click **Customize**
+8. Copy the **Search engine ID** shown at the top
+   (looks like `a1b2c3d4e5f6:something`)
+   → This is your **`GOOGLE_CSE_CX`**
+
+**Step B — Enable the API and get the key (~2 min):**
+
+1. Go to **console.cloud.google.com** (you're already signed in)
+2. Search bar → type **Custom Search API** → click it → click **Enable**
+3. Go to **APIs & Services → Credentials**
+4. Click your existing API key (the one used for Google Maps)
+5. Under "API restrictions" → add **Custom Search API** to the allowed list
+6. Save — use this same key as your **`GOOGLE_CSE_KEY`**
+
+Add both to your `.env`:
+```
+GOOGLE_CSE_KEY=your_google_api_key_here
+GOOGLE_CSE_CX=your_engine_id_here
+```
+
+**Cost:** 100 free queries/day. $5 per 1,000 if you go over.
+100/day = enriching ~100 leads per day for free.
+
+---
+
+## 3. Hunter.io API Key — OPTIONAL (email verification + confidence scores)
+
+Hunter verifies that found emails actually exist and adds a confidence percentage.
 Without it, enrichment still works — emails just won't be verified.
 
-**Steps:**
+**Steps (~5 min):**
 
-1. Go to **hunter.io** and create a free account
-2. Confirm your email
-3. Go to **Dashboard → API** (top right menu or sidebar)
-4. Your API key is shown on that page — copy it
+1. Go to **hunter.io** → create a free account
+2. Confirm your email address
+3. Go to **Dashboard → API** (top right menu)
+4. Copy the API key shown on that page
 
-Paste it in your `.env`:
+Add to your `.env`:
 ```
 HUNTER_API_KEY=your_key_here
 ```
 
-**Cost:** Free plan = 25 searches/month + 50 verifications/month.
-Starter plan = $49/month for 500 searches. Only needed if you want email confidence scores.
+**Cost:** Free plan = 25 searches + 50 verifications/month.
+Starter = $49/month for 500 searches. Optional — skip for now.
 
 ---
 
-## 4. Google Custom Search Engine — OPTIONAL (alternative to Bing)
+## 4. Snov.io API Key — OPTIONAL (extra email finder)
 
-A second search provider for enrichment. Only set this up if Bing isn't working or you want more search coverage. You need **both** a CSE key and a CX (engine) ID.
-
-**Step A — Create the search engine:**
-
-1. Go to **programmablesearchengine.google.com**
-2. Click **Add** (or **Get Started**)
-3. Under "Sites to search" type `*.com` (search the whole web)
-4. Name it `LNVE`
-5. Click **Create**
-6. Click **Customize** on your new engine
-7. Turn on **"Search the entire web"**
-8. Copy the **Search engine ID** — this is your `GOOGLE_CSE_CX`
-
-**Step B — Get the API key:**
-
-1. Go to **console.cloud.google.com**
-2. **APIs & Services → Library** → search **Custom Search API** → Enable it
-3. **APIs & Services → Credentials → Create Credentials → API Key**
-4. Copy the key
-
-Paste both in your `.env`:
-```
-GOOGLE_CSE_KEY=your_api_key_here
-GOOGLE_CSE_CX=your_engine_id_here
-```
-
-**Cost:** Free = 100 queries/day. Paid = $5 per 1,000 queries.
-
----
-
-## 5. Snov.io API Key — OPTIONAL (extra email finder)
-
-Another email discovery service. Lower priority — only add this if Hunter + Bing aren't finding enough emails.
+Additional email discovery on top of Google CSE. Low priority.
 
 **Steps:**
-
 1. Go to **snov.io** → create a free account
-2. Go to **Settings → API**
-3. Copy your **Client ID** (used as the API key)
+2. Go to **Settings → API** → copy your Client ID
 
-Paste it in your `.env`:
 ```
 SNOV_API_KEY=your_client_id_here
 ```
 
-**Cost:** Free plan = 50 credits/month.
+**Cost:** Free = 50 credits/month.
 
 ---
 
-## Summary — What to set up first
+## Summary
 
 | Priority | Key | Where | Time | Cost |
 |---|---|---|---|---|
-| 🔴 Required | `GOOGLE_MAPS_KEY` | Google Cloud Console | Already have it | $200 free/month |
-| 🔴 Required | `BING_V7_KEY` | portal.azure.com | ~10 min | Free (1k/month) |
-| 🟡 Recommended | `HUNTER_API_KEY` | hunter.io | ~5 min | Free (25/month) |
-| 🟢 Optional | `GOOGLE_CSE_KEY` + `GOOGLE_CSE_CX` | Google Cloud + PSE | ~15 min | Free (100/day) |
-| 🟢 Optional | `SNOV_API_KEY` | snov.io | ~5 min | Free (50/month) |
+| 🔴 Required | `GOOGLE_MAPS_KEY` | console.cloud.google.com | Have it | $200 free/mo |
+| 🔴 Required | `GOOGLE_CSE_KEY` + `GOOGLE_CSE_CX` | programmablesearchengine.google.com | ~5 min | 100 free/day |
+| 🟡 Recommended | `HUNTER_API_KEY` | hunter.io | ~5 min | Free (25/mo) |
+| 🟢 Optional | `SNOV_API_KEY` | snov.io | ~5 min | Free (50/mo) |
 
-**Minimum to get everything working:** Google Maps key (you have it) + Bing key (~10 minutes to set up).
+**Minimum to get fully running:** Google Maps key (you have it) + Google CSE (~5 min to set up).
