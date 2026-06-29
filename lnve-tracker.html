@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LNVE — Project Tracker</title>
+<style>
+:root {
+  --bg:        #0f1117;
+  --surface:   #1a1d27;
+  --surface2:  #22263a;
+  --border:    #2e3350;
+  --accent:    #4f8ef7;
+  --accent2:   #3ecfb2;
+  --warn:      #f5a623;
+  --danger:    #e85555;
+  --success:   #3ecf8e;
+  --text:      #e8eaf0;
+  --muted:     #7a809e;
+  --radius:    10px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;font-size:14px;line-height:1.5;min-height:100vh}
+
+/* ── Header ── */
+.header{background:var(--surface);border-bottom:1px solid var(--border);padding:18px 28px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+.header-left{display:flex;align-items:center;gap:14px}
+.logo{font-size:18px;font-weight:700;letter-spacing:-.3px}
+.logo span{color:var(--accent)}
+.tagline{color:var(--muted);font-size:12px}
+.header-right{display:flex;align-items:center;gap:16px}
+.filter-btn{background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:6px 14px;border-radius:6px;cursor:pointer;font-size:12px;transition:all .15s}
+.filter-btn.active{background:var(--accent);border-color:var(--accent);color:#fff}
+.filter-btn:hover:not(.active){border-color:var(--accent);color:var(--accent)}
+
+/* ── Progress bar ── */
+.progress-row{background:var(--surface);border-bottom:1px solid var(--border);padding:14px 28px;display:flex;align-items:center;gap:16px}
+.progress-track{flex:1;height:6px;background:var(--border);border-radius:3px;overflow:hidden}
+.progress-fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:3px;transition:width .4s ease}
+.progress-label{font-size:12px;color:var(--muted);white-space:nowrap;min-width:120px;text-align:right}
+
+/* ── Stats row ── */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--border);border-bottom:1px solid var(--border)}
+.stat{background:var(--surface);padding:16px 24px;text-align:center}
+.stat-num{font-size:26px;font-weight:700;letter-spacing:-.5px}
+.stat-lbl{font-size:11px;color:var(--muted);margin-top:2px;text-transform:uppercase;letter-spacing:.5px}
+.num-done{color:var(--success)}
+.num-partial{color:var(--warn)}
+.num-todo{color:var(--muted)}
+.num-total{color:var(--text)}
+
+/* ── Main layout ── */
+.main{max-width:960px;margin:0 auto;padding:28px 20px}
+
+/* ── Phase cards ── */
+.phase{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:12px;overflow:hidden;transition:border-color .15s}
+.phase:hover{border-color:var(--border)}
+
+.phase-header{display:flex;align-items:center;gap:12px;padding:14px 18px;cursor:pointer;user-select:none;transition:background .1s}
+.phase-header:hover{background:var(--surface2)}
+.phase-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.dot-done{background:var(--success)}
+.dot-partial{background:var(--warn)}
+.dot-todo{background:var(--border)}
+.phase-name{font-weight:600;font-size:14px;flex:1}
+.phase-badge{font-size:11px;padding:2px 9px;border-radius:20px;font-weight:600;flex-shrink:0}
+.badge-done{background:rgba(62,207,142,.15);color:var(--success)}
+.badge-partial{background:rgba(245,166,35,.15);color:var(--warn)}
+.badge-todo{background:rgba(122,128,158,.1);color:var(--muted)}
+.phase-chevron{color:var(--muted);font-size:11px;transition:transform .2s;flex-shrink:0}
+.phase-chevron.open{transform:rotate(180deg)}
+.phase-mini-bar{width:80px;height:4px;background:var(--border);border-radius:2px;overflow:hidden;flex-shrink:0}
+.phase-mini-fill{height:100%;border-radius:2px;transition:width .3s}
+
+/* ── Task list ── */
+.task-list{border-top:1px solid var(--border)}
+.task{display:flex;align-items:flex-start;gap:0;border-bottom:1px solid var(--border);transition:background .1s}
+.task:last-child{border-bottom:none}
+.task.done .task-title{text-decoration:line-through;color:var(--muted)}
+
+/* checkbox cell */
+.task-check{width:48px;flex-shrink:0;display:flex;align-items:center;justify-content:center;padding:14px 0;cursor:pointer}
+.cb{width:18px;height:18px;border-radius:4px;border:1.5px solid var(--border);display:flex;align-items:center;justify-content:center;transition:all .15s;cursor:pointer}
+.cb:hover{border-color:var(--accent)}
+.cb.checked{background:var(--success);border-color:var(--success)}
+.cb.checked::after{content:"✓";font-size:11px;color:#111;font-weight:700;line-height:1}
+.cb.partial{background:var(--warn);border-color:var(--warn)}
+.cb.partial::after{content:"~";font-size:12px;color:#111;font-weight:700;line-height:1}
+
+/* task content — clickable to expand */
+.task-body{flex:1;padding:12px 18px 12px 0;cursor:pointer}
+.task-body:hover{color:var(--accent)}
+.task-top{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.task-title{font-size:13.5px;line-height:1.4}
+.task-tag{font-size:10px;padding:1px 7px;border-radius:10px;font-weight:600;white-space:nowrap}
+.tag-next{background:rgba(79,142,247,.2);color:var(--accent)}
+.tag-security{background:rgba(232,85,85,.15);color:var(--danger)}
+.task-detail{margin-top:10px;padding:12px 14px;background:var(--surface2);border-radius:8px;border-left:3px solid var(--accent);font-size:13px;color:var(--muted);line-height:1.7;display:none}
+.task-detail.open{display:block}
+.task-detail code{background:rgba(79,142,247,.12);color:var(--accent);padding:1px 5px;border-radius:3px;font-family:monospace;font-size:12px}
+.task-detail ul{margin:6px 0 6px 16px}
+.task-detail li{margin:3px 0}
+.task-detail strong{color:var(--text)}
+
+/* ── Empty state ── */
+.empty{text-align:center;padding:48px 20px;color:var(--muted)}
+.empty-icon{font-size:32px;margin-bottom:12px}
+
+/* ── Footer ── */
+.footer{text-align:center;padding:24px;color:var(--muted);font-size:12px;border-top:1px solid var(--border);margin-top:20px}
+.footer a{color:var(--accent);text-decoration:none}
+.footer a:hover{text-decoration:underline}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-left">
+    <div class="logo">LNVE<span>.</span></div>
+    <div class="tagline">Project Tracker — Local Niche Validation Engine</div>
+  </div>
+  <div class="header-right">
+    <button class="filter-btn active" onclick="setFilter('all',this)">All</button>
+    <button class="filter-btn" onclick="setFilter('todo',this)">Remaining</button>
+    <button class="filter-btn" onclick="setFilter('done',this)">Complete</button>
+    <button class="filter-btn" onclick="setFilter('next',this)">Next up</button>
+  </div>
+</div>
+
+<div class="progress-row">
+  <div class="progress-track"><div class="progress-fill" id="prog-fill" style="width:0%"></div></div>
+  <div class="progress-label" id="prog-label">Loading…</div>
+</div>
+
+<div class="stats">
+  <div class="stat"><div class="stat-num num-done" id="s-done">0</div><div class="stat-lbl">Complete</div></div>
+  <div class="stat"><div class="stat-num num-partial" id="s-partial">0</div><div class="stat-lbl">In progress</div></div>
+  <div class="stat"><div class="stat-num num-todo" id="s-todo">0</div><div class="stat-lbl">Remaining</div></div>
+  <div class="stat"><div class="stat-num num-total" id="s-total">0</div><div class="stat-lbl">Total tasks</div></div>
+</div>
+
+<div class="main" id="main"></div>
+
+<div class="footer">
+  Repo: <a href="https://github.com/jenozu/LNVE" target="_blank">github.com/jenozu/LNVE</a>
+  &nbsp;·&nbsp; Last updated: <span id="last-updated"></span>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════
+//  PROJECT DATA  —  edit task status here as you complete work
+//  status: 'done' | 'partial' | 'todo'
+//  tag:    'next' | 'security' | null
+// ═══════════════════════════════════════════════════════════
+const PHASES = [
+  {
+    id:'p1', name:'Architecture & planning', status:'done',
+    tasks:[
+      {id:'1a', status:'done', title:'Full architecture audit of original codebase',
+       detail:'Reviewed all files in the original flat-file project. Identified dead code (app-backup.py, extra code.txt), hardcoded API keys, broken relative imports in the enrichment package, two Flask apps conflicting on port 5000, and a 1,500-line god file. Produced a full written audit with scores and recommendations.'},
+      {id:'1b', status:'done', title:'Identified all dead code, broken imports, and security issues',
+       detail:'Found: (1) Google Maps API key hardcoded in plain text in app.py, (2) enrich_api (1).py using relative imports that couldn\'t resolve because providers/ subfolder didn\'t exist, (3) enrichment_init.py named wrong — should be __init__.py, (4) flask_integration.py was instructions not real code. All fixed in the new repo.'},
+      {id:'1c', status:'done', title:'Defined clean folder structure',
+       detail:'Designed the new structure: <code>core/</code> (safety), <code>scrapers/</code> (data acquisition), <code>enrichment/providers/</code> (email discovery), <code>database/</code> (repository pattern), <code>web/routes/</code> (Flask blueprints), <code>web/templates/</code> (Jinja2). Each module has a clear single responsibility.'},
+      {id:'1d', status:'done', title:'Wrote 7-phase roadmap with implementation order',
+       detail:'Phases: Architecture → Installation → Enrichment fix → Core UX → Analysis Engine → Landing Page → Outreach. Decided to drop N8N entirely — all scoring logic will be ported to Python so the app runs standalone.'},
+      {id:'1e', status:'done', title:'Decided to drop N8N — pure Python/Flask approach',
+       detail:'N8N added operational complexity (separate server, workflow JSON) with no real benefit for a solo tool. Everything N8N did (market scoring, landing page generation) will be implemented as Python functions called from Flask routes.'},
+    ]
+  },
+  {
+    id:'p2', name:'Repository setup', status:'done',
+    tasks:[
+      {id:'2a', status:'done', title:'Created github.com/jenozu/LNVE repo',
+       detail:'Created a fresh empty public repo at github.com/jenozu/LNVE to start with a clean slate, separate from the original messy codebase on your local machine.'},
+      {id:'2b', status:'done', title:'Built complete clean project from scratch (42 files)',
+       detail:'Every file was written fresh — no copy-paste from the old code. 42 files across 8 folders. All imports verified to work with the new package structure.'},
+      {id:'2c', status:'done', title:'Pushed to GitHub using classic PAT token',
+       detail:'The fine-grained PAT (github_pat_...) had permission issues. Switched to a classic token (ghp_...) which works correctly for git push. The repo is now live.'},
+    ]
+  },
+  {
+    id:'p3', name:'Core infrastructure', status:'done',
+    tasks:[
+      {id:'3a', status:'done', title:'config.py — single unified settings loader',
+       detail:'One file reads all environment variables via python-dotenv. Every other module does <code>from config import settings</code> — nothing calls <code>os.getenv()</code> directly. Includes helper methods like <code>settings.has_google_cse()</code> and <code>settings.validate()</code> that checks required keys at startup.'},
+      {id:'3b', status:'done', title:'core/rate_limit.py — TokenBucket rate limiter',
+       detail:'Thread-safe token bucket implementation. Controls how many API requests per second are made. Used by scrapers to avoid hitting Google Maps rate limits. Supports burst capacity and steady-state rate.'},
+      {id:'3c', status:'done', title:'core/proxy_manager.py — proxy rotation',
+       detail:'Manages a pool of HTTP proxies. Tracks failures per proxy, bans proxies that fail too many times, and automatically recovers them after a cooldown period. Optional — works fine without any proxies configured.'},
+      {id:'3d', status:'done', title:'core/safe_request.py — HTTP wrapper with retry and backoff',
+       detail:'Wraps all external HTTP calls. Handles: rate limiting (waits for token), proxy rotation, 429 detection with backoff, connection errors with exponential retry, and user-agent rotation. Use this for any new HTTP calls you add.'},
+      {id:'3e', status:'done', title:'database/repository.py — all SQLite operations',
+       detail:'Single file contains every database query. WAL mode enabled (prevents "database is locked" errors under concurrent threads). Tables: searches, leads. Methods: create_search, insert_lead, update_lead_enrichment, get_analytics, etc. Add new queries here — never write raw sqlite3 calls elsewhere.'},
+    ]
+  },
+  {
+    id:'p4', name:'Scrapers', status:'done',
+    tasks:[
+      {id:'4a', status:'done', title:'scrapers/google_maps.py — Places API scraper',
+       detail:'Extracted from the original 1,500-line app.py. Calls <code>gmaps.places_nearby()</code> with pagination, then <code>gmaps.place()</code> for details. Only saves businesses where <code>website == None</code>. Checks <code>is_cancelled()</code> between every page and every place detail call so you can stop it mid-run.'},
+      {id:'4b', status:'done', title:'scrapers/yellow_pages.py — Playwright scraper',
+       detail:'Async Playwright session running inside a background thread (via asyncio.new_event_loop()). Scrapes yellowpages.ca with multiple CSS selector fallbacks for name, phone, and address. Checks for website links and only saves businesses without one. Run <code>playwright install chromium</code> once to set it up.'},
+      {id:'4c', status:'done', title:'Cancellation support and search status polling',
+       detail:'Cancel buttons on the results page call <code>POST /cancel/&lt;search_id&gt;</code> which sets the DB status to "cancelled". Both scrapers check this flag every iteration and stop cleanly. The <code>GET /api/search-status/&lt;id&gt;</code> endpoint returns JSON with per-source status — used by the JS polling on the results page.'},
+    ]
+  },
+  {
+    id:'p5', name:'Enrichment pipeline', status:'partial',
+    tasks:[
+      {id:'5a', status:'done', title:'enrichment/pipeline.py — main orchestrator',
+       detail:'The <code>run_enrichment(batch_size, dry_run)</code> function fetches leads without emails from the DB, searches the web for their contact pages, scrapes those pages for emails, optionally verifies with Hunter, and writes results back. Returns stats dict: {processed, enriched, errors}.'},
+      {id:'5b', status:'done', title:'All provider files with correct imports',
+       detail:'bing_provider.py, google_cse_provider.py, hunter_provider.py, snov_provider.py, fb_scraper.py, yelp_scraper.py, bbb_scraper.py — all in enrichment/providers/ with correct relative imports. The core bug from the old code (wrong __init__.py names and missing providers/ folder) is fixed.'},
+      {id:'5c', status:'todo', tag:'next', title:'Test enrichment end-to-end with your Google CSE key',
+       detail:'<strong>How to test:</strong> Start the app, run a search for "electrician" in a small city (10km radius), wait for it to complete, then click "Enrich 5 Leads" on the results page. Watch the terminal for log output. You should see lines like: <code>[1/5] Enriching: Acme Electric</code> then <code>✓ owner@acmeelectric.ca</code>. If you see errors, check: (1) GOOGLE_CSE_KEY is set, (2) Custom Search API is enabled in Google Cloud Console, (3) your CX ID is correct.'},
+      {id:'5d', status:'todo', title:'Verify email discovery rate on real leads',
+       detail:'After running enrichment on 20–30 real leads, check what percentage got emails found. Expected: 20–40%. If lower, common fixes: (1) try adding HUNTER_API_KEY for domain search, (2) increase RESULTS_PER_LEAD in .env to 8 or 10 to scrape more pages per lead, (3) check if Google CSE is returning relevant results (add <code>verbose=True</code> to run_enrichment call to see what URLs are being scraped).'},
+      {id:'5e', status:'todo', title:'Tune confidence scoring thresholds',
+       detail:'The current confidence score is basic (50 = scraped, 75+ = Hunter verified). After running enrichment on real data, you\'ll want to review which emails are accurate and adjust. Add a "confidence" column sort to the results page so you can see which emails are most reliable.'},
+    ]
+  },
+  {
+    id:'p6', name:'Web UI (Flask)', status:'partial',
+    tasks:[
+      {id:'6a', status:'done', title:'app.py — clean entry point, all blueprints registered',
+       detail:'The main app.py is now ~40 lines. It imports and registers 5 blueprints: search, results, analytics, enrichment, export. At startup it calls settings.validate() (fails fast if GOOGLE_MAPS_KEY is missing) and Repository().init() (creates DB and runs migrations).'},
+      {id:'6b', status:'done', title:'All 5 route blueprints implemented',
+       detail:'search.py (/, /search, /cancel, /api/search-status), results.py (/results, /search/&lt;id&gt;), analytics.py (/analytics), enrichment.py (/enrich/run, /enrich/status), export.py (/export/csv). Each is a separate file in web/routes/.'},
+      {id:'6c', status:'done', title:'Jinja2 templates replacing f-string HTML',
+       detail:'All HTML is now in web/templates/ as real .html files with Jinja2 {% block %} inheritance. The old code had 800+ lines of f-string HTML baked into route handlers — all gone. Edit the templates directly to change any UI element.'},
+      {id:'6d', status:'todo', tag:'next', title:'Search detail page — show all leads for one search',
+       detail:'The template (search_detail.html) exists and the route (/search/&lt;id&gt;) is written. Test it: after a search completes, click the "View" button next to it on the results page. It should show all leads for that specific search with their emails and confidence scores.'},
+      {id:'6e', status:'todo', title:'Pagination on leads view',
+       detail:'The results page currently shows the last 50 leads. To add pagination: in web/routes/results.py, add a <code>page</code> query param, calculate offset, and pass page info to the template. In results.html, add prev/next buttons. The DB query in repository.py (get_recent_leads) already accepts a limit param.'},
+      {id:'6f', status:'todo', title:'Filter leads by source, has-email, search type',
+       detail:'Add a filter bar above the leads table: dropdowns for Source (Google Maps / Yellow Pages / All), Has Email (Yes / No / All), and Search Type. In the route, pass these as query params to the repository. In the template, pre-select the active filters in the dropdowns.'},
+    ]
+  },
+  {
+    id:'p7', name:'Security & configuration', status:'partial',
+    tasks:[
+      {id:'7a', status:'done', title:'API key removed from source — now reads from .env',
+       detail:'The Google Maps key that was hardcoded as <code>API_KEY = "AIzaSy..."</code> on line 21 of the old app.py is gone. The new app.py reads it as <code>settings.GOOGLE_MAPS_KEY</code> which comes from your .env file via python-dotenv.'},
+      {id:'7b', status:'done', title:'.env.example, .gitignore — credentials excluded from git',
+       detail:'.gitignore excludes: .env, *.db, venv/, *.xlsx, *.csv, generated/. The .env.example file documents every variable with comments. Never commit your actual .env file.'},
+      {id:'7c', status:'todo', tag:'security', title:'Add basic auth to protect all routes',
+       detail:'<strong>How to add it:</strong> Install <code>pip install flask-httpauth</code>. Add to app.py: <code>from flask_httpauth import HTTPBasicAuth</code>. Create an auth object and a user dict reading from .env (DASHBOARD_USER, DASHBOARD_PASS). Add <code>@auth.login_required</code> to each blueprint\'s routes, or use a before_request hook. This prevents anyone with your IP/URL from accessing the dashboard.'},
+      {id:'7d', status:'todo', tag:'security', title:'CSRF protection on POST routes',
+       detail:'Install <code>pip install flask-wtf</code>. Enable CSRF in app.py: <code>from flask_wtf.csrf import CSRFProtect; csrf = CSRFProtect(app)</code>. Add <code>{{ csrf_token() }}</code> to every form in the templates. This prevents cross-site request forgery on the /search and /cancel endpoints.'},
+    ]
+  },
+  {
+    id:'p8', name:'First run & local testing', status:'todo',
+    tasks:[
+      {id:'8a', status:'todo', tag:'next', title:'Clone repo onto your Windows PC',
+       detail:'Open Command Prompt or PowerShell and run: <code>git clone https://github.com/jenozu/LNVE.git</code> then <code>cd LNVE</code>. This downloads all 42 files into a new LNVE folder on your machine.'},
+      {id:'8b', status:'todo', tag:'next', title:'Create venv and install dependencies',
+       detail:'Run: <code>python -m venv venv</code> then <code>venv\\Scripts\\activate</code> (you\'ll see (venv) in your prompt). Then: <code>pip install -r requirements.txt</code>. This installs Flask, googlemaps, playwright, openai, beautifulsoup4, and all other dependencies.'},
+      {id:'8c', status:'todo', tag:'next', title:'Run playwright install chromium',
+       detail:'Run: <code>playwright install chromium</code> (inside your activated venv). This downloads the headless Chromium browser that the Yellow Pages scraper uses. Only needs to be done once. Takes about 1–2 minutes to download.'},
+      {id:'8d', status:'todo', tag:'next', title:'Create .env file with your keys',
+       detail:'Run: <code>copy .env.example .env</code>. Then open .env in Notepad and fill in: GOOGLE_MAPS_KEY (your existing key), GOOGLE_CSE_KEY (same key), GOOGLE_CSE_CX (e3ceee74019224583), OPENAI_API_KEY (your key), SECRET_KEY (any random string).'},
+      {id:'8e', status:'todo', tag:'next', title:'Run python app.py — confirm it starts',
+       detail:'Run: <code>python app.py</code>. You should see in the terminal: <code>INFO Configuration validated OK</code>, <code>INFO Google Maps: ✓</code>, <code>INFO Database initialised: leads.db</code>, <code>INFO LNVE started — http://127.0.0.1:5000</code>. If you see an error about GOOGLE_MAPS_KEY, your .env file isn\'t being found — make sure it\'s in the LNVE/ folder (same level as app.py).'},
+      {id:'8f', status:'todo', title:'Run a test search and verify leads appear',
+       detail:'Open http://127.0.0.1:5000, select "Electrician", enter "Hamilton, ON", radius 10km, check both sources, click Start Search. The results page should show the search as "running" and leads should start appearing within 30 seconds. Check both Google Maps and Yellow Pages columns update.'},
+      {id:'8g', status:'todo', title:'Click Enrich and verify emails are found',
+       detail:'After the search completes, go to Results and click "Enrich 30 Leads". Watch the terminal for log output. After a few minutes, refresh the results page and check if any leads now have emails in the Email column.'},
+      {id:'8h', status:'todo', title:'Download CSV and verify it contains correct data',
+       detail:'Click "Export CSV" on the results page. Open the downloaded file in Excel or Google Sheets. Verify it has columns: Business Name, Address, Phone, Email, Contact Name, Source, Enrichment Source, Confidence, Created At, Search Type, Location.'},
+      {id:'8i', status:'todo', title:'Run pytest tests/ -v — all tests should pass',
+       detail:'Run: <code>pip install pytest</code> then <code>pytest tests/ -v</code>. You should see: test_safety.py::TestTokenBucket::test_allows_burst PASSED, test_database.py::TestRepository::test_create_and_get_search PASSED, etc. If any fail, the error message will tell you exactly what\'s wrong.'},
+    ]
+  },
+  {
+    id:'p9', name:'Market analysis engine', status:'todo',
+    tasks:[
+      {id:'9a', status:'todo', title:'Create analysis/scorer.py — port N8N scoring to Python',
+       detail:'This file replaces the N8N workflow\'s scoring logic. It takes a list of businesses (from your SQLite DB) and calculates: demand score (review count, recency), competition score (% with websites), and calls OpenAI to generate pain points and strategic angles. Returns a Market Viability Score 0–100.'},
+      {id:'9b', status:'todo', title:'Implement demand and competition score calculations',
+       detail:'Demand score formula (from the original N8N JS nodes): reviewCount * 0.4 + reviewVelocity * 0.3 + recentReviews * 0.3. Competition score: (businessesWithNoWebsite / totalBusinesses) * 100. These were hardcoded in N8N JavaScript compute nodes — port them directly to Python.'},
+      {id:'9c', status:'todo', title:'OpenAI call for pain points and strategic angles',
+       detail:'Call OpenAI with the business names, review snippets, and scores. Prompt: "Analyze these local businesses in [niche] in [city]. Identify the top 3 customer pain points and 3 strategic angles for a new entrant." Store the response in the searches table as market_analysis JSON.'},
+      {id:'9d', status:'todo', title:'Add POST /api/analyze/<search_id> route',
+       detail:'Add to web/routes/analytics.py. The route calls scorer.py, saves the result to the DB, and returns JSON. Wire up an "Analyze Market" button on the search detail page that triggers this endpoint and shows the score.'},
+      {id:'9e', status:'todo', title:'Display market score on search detail page',
+       detail:'On web/templates/search_detail.html, add a "Market Score" stat card at the top. Color code: green (70+), amber (40–69), red (<40). Below the score, show the pain points and strategic angles from the OpenAI response.'},
+    ]
+  },
+  {
+    id:'p10', name:'Landing page generator', status:'todo',
+    tasks:[
+      {id:'10a', status:'todo', title:'Move generator logic into analysis/landing_page.py',
+       detail:'The original generate-landing-page.py CLI script already works. Move its core function (generate_html) into analysis/landing_page.py as a proper module. It takes: niche, city, pain_points, strategic_angles, viability_score → returns an HTML string.'},
+      {id:'10b', status:'todo', title:'Add GET /landing-page/<search_id> route',
+       detail:'This route: (1) gets the search from the DB, (2) checks that market analysis has been run (returns error if not), (3) calls landing_page.generate_html(), (4) either returns the HTML directly (for preview) or as a download.'},
+      {id:'10c', status:'todo', title:'Preview and download button on search detail page',
+       detail:'Add two buttons to search_detail.html: "Preview Landing Page" (opens in new tab) and "Download HTML" (triggers file download). Only show these buttons after market analysis has been run.'},
+      {id:'10d', status:'todo', title:'Store generated pages in database',
+       detail:'Add a landing_pages table: id, search_id, created_at, html_content (TEXT). Store each generated page so you can retrieve past ones. Add a "history" section to the search detail page listing previously generated pages with their creation date.'},
+    ]
+  },
+  {
+    id:'p11', name:'Outreach campaign builder', status:'todo',
+    tasks:[
+      {id:'11a', status:'todo', title:'Per-lead AI email generation using OpenAI',
+       detail:'Add a "Generate Email" button next to each enriched lead on the search detail page. This calls OpenAI with: business name, contact name, niche, pain points from the market analysis. Returns a personalized outreach email. Show it in a modal for review/editing.'},
+      {id:'11b', status:'todo', title:'Campaign builder — select leads, generate batch emails',
+       detail:'Add checkboxes to the leads table. A "Build Campaign" button collects selected leads and calls the email generator for each. Shows a preview page with all emails side-by-side for review before sending.'},
+      {id:'11c', status:'todo', title:'Email preview and editing before sending',
+       detail:'The campaign preview page should have: lead name, their email address, the generated message (editable textarea), subject line, and a checkbox to include/exclude. Bulk select and a "Send Selected" button at the bottom.'},
+      {id:'11d', status:'todo', title:'SMTP integration for actual sending',
+       detail:'Use the SMTP credentials already in your .env (SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS). Python\'s built-in smtplib works fine. Send one email per lead, log each send result to the DB. Add a sent_at column to the leads table.'},
+      {id:'11e', status:'todo', title:'Sent/not sent tracking per lead',
+       detail:'Add columns to leads table: email_sent_at (timestamp), email_subject (text). On the results page, show a small "Sent" badge on leads that have been emailed. This prevents accidentally emailing the same lead twice.'},
+    ]
+  },
+  {
+    id:'p12', name:'Testing & reliability', status:'partial',
+    tasks:[
+      {id:'12a', status:'done', title:'tests/test_safety.py — TokenBucket and ProxyManager tests',
+       detail:'4 tests covering: burst allows rapid calls, rate limiting slows down calls over time, proxy banning after threshold failures, success resets fail count. Run with: <code>pytest tests/test_safety.py -v</code>'},
+      {id:'12b', status:'done', title:'tests/test_database.py — Repository CRUD tests',
+       detail:'6 tests covering: create and get search, lead deduplication (same business name in same search is rejected), get leads for search, update enrichment data, cancel search, get analytics. Each test uses a fresh temp DB. Run with: <code>pytest tests/test_database.py -v</code>'},
+      {id:'12c', status:'todo', tag:'next', title:'tests/test_scrapers.py — mocked HTTP scraper tests',
+       detail:'Write unit tests for GoogleMapsScraper and YellowPagesScraper using pytest-mock to mock the API calls. Test: normal page returns leads, empty results stop pagination, cancellation flag is respected, duplicate business is not inserted. Install: <code>pip install pytest-mock</code>'},
+      {id:'12d', status:'todo', title:'tests/test_enrichment.py — mocked enrichment tests',
+       detail:'Test the enrichment pipeline with mocked search clients and scrapers. Verify: email extraction regex works, choose_best_email prefers personal over generic addresses, the pipeline handles search client errors gracefully, dry_run doesn\'t write to DB.'},
+      {id:'12e', status:'todo', title:'Structured logging to file',
+       detail:'Add a logging config to app.py that writes to logs/lnve.log with rotation (max 10MB, keep 3 files). Use Python\'s logging.handlers.RotatingFileHandler. This lets you debug issues after the fact without tailing the terminal.'},
+    ]
+  },
+  {
+    id:'p13', name:'Documentation', status:'partial',
+    tasks:[
+      {id:'13a', status:'done', title:'docs/ARCHITECTURE.md — folder structure and data flow',
+       detail:'Documents the full folder layout, explains the data flow from search → scraper → DB → enrichment → export, and includes instructions for adding new scrapers and enrichment providers.'},
+      {id:'13b', status:'done', title:'docs/SETUP.md — phase-by-phase installation guide',
+       detail:'Complete setup guide covering all 5 phases: Prerequisites, Installation, Configuration, First Run, Daily Workflow. Includes a pre-launch checklist and common errors section.'},
+      {id:'13c', status:'done', title:'docs/API_KEYS.md — where to get each API key',
+       detail:'Covers: Google Maps (console.cloud.google.com), Google CSE (programmablesearchengine.google.com), Hunter.io, Snov.io. Notes that Bing Search v7 is retired and Google CSE is the replacement.'},
+      {id:'13d', status:'todo', title:'README.md at repo root with quick start',
+       detail:'The repo currently has no README.md at the root. Add one with: project description, 5-step quick start, screenshot of the UI, feature list (scraping, enrichment, analytics, export), and links to the docs/ files.'},
+      {id:'13e', status:'todo', title:'Docstrings on all public functions and classes',
+       detail:'Add Google-style docstrings to: all Repository methods, the Scraper run() methods, run_enrichment(), safe_api_call(), and all Flask route functions. This makes the codebase navigable without reading every line.'},
+    ]
+  },
+];
+
+// ═══════════════════════════════════════════════════════════
+//  STATE
+// ═══════════════════════════════════════════════════════════
+let filter = 'all';
+let openTasks = new Set();
+
+// Load saved state from localStorage
+function loadState() {
+  try {
+    const saved = JSON.parse(localStorage.getItem('lnve-tracker') || '{}');
+    if (saved.statuses) {
+      PHASES.forEach(ph => ph.tasks.forEach(t => {
+        if (saved.statuses[t.id]) t.status = saved.statuses[t.id];
+      }));
+    }
+    if (saved.open) openTasks = new Set(saved.open);
+  } catch(e) {}
+}
+
+function saveState() {
+  const statuses = {};
+  PHASES.forEach(ph => ph.tasks.forEach(t => { statuses[t.id] = t.status; }));
+  localStorage.setItem('lnve-tracker', JSON.stringify({
+    statuses,
+    open: [...openTasks],
+    updated: new Date().toISOString()
+  }));
+}
+
+// ═══════════════════════════════════════════════════════════
+//  STATS
+// ═══════════════════════════════════════════════════════════
+function calcStats() {
+  let done=0, partial=0, todo=0;
+  PHASES.forEach(ph => ph.tasks.forEach(t => {
+    if (t.status==='done') done++;
+    else if (t.status==='partial') partial++;
+    else todo++;
+  }));
+  return {done, partial, todo, total: done+partial+todo};
+}
+
+function updateStats() {
+  const s = calcStats();
+  document.getElementById('s-done').textContent = s.done;
+  document.getElementById('s-partial').textContent = s.partial;
+  document.getElementById('s-todo').textContent = s.todo;
+  document.getElementById('s-total').textContent = s.total;
+  const pct = Math.round((s.done / s.total) * 100);
+  document.getElementById('prog-fill').style.width = pct + '%';
+  document.getElementById('prog-label').textContent =
+    `${pct}% complete · ${s.done} of ${s.total} tasks done`;
+}
+
+// ═══════════════════════════════════════════════════════════
+//  RENDER
+// ═══════════════════════════════════════════════════════════
+function phaseStatus(ph) {
+  const tasks = ph.tasks;
+  if (tasks.every(t=>t.status==='done')) return 'done';
+  if (tasks.some(t=>t.status==='done'||t.status==='partial')) return 'partial';
+  return 'todo';
+}
+
+function taskMatchesFilter(t) {
+  if (filter === 'all') return true;
+  if (filter === 'done') return t.status === 'done';
+  if (filter === 'todo') return t.status !== 'done';
+  if (filter === 'next') return t.tag === 'next';
+  return true;
+}
+
+function render() {
+  const main = document.getElementById('main');
+  main.innerHTML = '';
+
+  let anyVisible = false;
+
+  PHASES.forEach(ph => {
+    const visibleTasks = ph.tasks.filter(taskMatchesFilter);
+    if (visibleTasks.length === 0) return;
+    anyVisible = true;
+
+    const done = ph.tasks.filter(t=>t.status==='done').length;
+    const pct = Math.round((done / ph.tasks.length) * 100);
+    const ps = phaseStatus(ph);
+
+    const div = document.createElement('div');
+    div.className = 'phase';
+    div.id = 'phase-' + ph.id;
+
+    const headerOpen = openTasks.has(ph.id);
+
+    let badgeCls='badge-todo', badgeTxt=`${ph.tasks.filter(t=>t.status!=='done').length} remaining`;
+    if (ps==='done'){badgeCls='badge-done';badgeTxt='Complete';}
+    else if (ps==='partial'){badgeCls='badge-partial';badgeTxt=`${done}/${ph.tasks.length} done`;}
+
+    let fillColor = ps==='done'?'var(--success)':ps==='partial'?'var(--warn)':'var(--border)';
+
+    div.innerHTML = `
+      <div class="phase-header" onclick="togglePhase('${ph.id}')">
+        <div class="phase-dot dot-${ps}"></div>
+        <div class="phase-name">${ph.name}</div>
+        <div class="phase-mini-bar"><div class="phase-mini-fill" style="width:${pct}%;background:${fillColor}"></div></div>
+        <span class="phase-badge ${badgeCls}">${badgeTxt}</span>
+        <span class="phase-chevron ${headerOpen?'open':''}" id="chev-${ph.id}">▾</span>
+      </div>
+      <div class="task-list" id="list-${ph.id}" style="display:${headerOpen?'block':'none'}">
+        ${visibleTasks.map(t => renderTask(t)).join('')}
+      </div>`;
+
+    main.appendChild(div);
+  });
+
+  if (!anyVisible) {
+    main.innerHTML = '<div class="empty"><div class="empty-icon">✓</div><div>No tasks match this filter.</div></div>';
+  }
+
+  updateStats();
+}
+
+function renderTask(t) {
+  const isOpen = openTasks.has(t.id);
+  const tagHtml = t.tag==='next'
+    ? '<span class="task-tag tag-next">next up</span>'
+    : t.tag==='security'
+    ? '<span class="task-tag tag-security">security</span>'
+    : '';
+  return `
+    <div class="task ${t.status}" id="task-${t.id}">
+      <div class="task-check" onclick="toggleCheck('${t.id}')">
+        <div class="cb ${t.status==='done'?'checked':t.status==='partial'?'partial':''}" id="cb-${t.id}"></div>
+      </div>
+      <div class="task-body" onclick="toggleDetail('${t.id}')">
+        <div class="task-top">
+          <span class="task-title" id="tt-${t.id}">${t.title}</span>
+          ${tagHtml}
+        </div>
+        <div class="task-detail ${isOpen?'open':''}" id="detail-${t.id}">${t.detail}</div>
+      </div>
+    </div>`;
+}
+
+// ═══════════════════════════════════════════════════════════
+//  INTERACTIONS
+// ═══════════════════════════════════════════════════════════
+window.togglePhase = function(id) {
+  const list = document.getElementById('list-'+id);
+  const chev = document.getElementById('chev-'+id);
+  const open = list.style.display !== 'none';
+  list.style.display = open ? 'none' : 'block';
+  chev.classList.toggle('open', !open);
+  if (!open) openTasks.add(id); else openTasks.delete(id);
+  saveState();
+};
+
+window.toggleDetail = function(id) {
+  const detail = document.getElementById('detail-'+id);
+  const isOpen = detail.classList.contains('open');
+  detail.classList.toggle('open', !isOpen);
+  if (!isOpen) openTasks.add(id); else openTasks.delete(id);
+  saveState();
+};
+
+window.toggleCheck = function(id) {
+  // Find task across all phases
+  let task;
+  PHASES.forEach(ph => ph.tasks.forEach(t => { if(t.id===id) task=t; }));
+  if (!task) return;
+  // Cycle: todo → done → todo
+  task.status = task.status === 'done' ? 'todo' : 'done';
+  // Update phase status badge
+  PHASES.forEach(ph => {
+    if (ph.tasks.find(t=>t.id===id)) {
+      ph.status = phaseStatus(ph);
+    }
+  });
+  saveState();
+  render();
+};
+
+window.setFilter = function(f, btn) {
+  filter = f;
+  document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  render();
+};
+
+// ═══════════════════════════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════════════════════════
+loadState();
+render();
+
+// Set last updated date
+document.getElementById('last-updated').textContent = new Date().toLocaleDateString('en-CA',{year:'numeric',month:'long',day:'numeric'});
+</script>
+</body>
+</html>
