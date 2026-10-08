@@ -63,9 +63,6 @@ CREATE TABLE IF NOT EXISTS leads (
     UNIQUE(search_id, business_name)
 );
 
-CREATE INDEX IF NOT EXISTS idx_leads_search     ON leads(search_id);
-CREATE INDEX IF NOT EXISTS idx_leads_email      ON leads(email);
-CREATE INDEX IF NOT EXISTS idx_searches_status  ON searches(status);
 """
 
 
@@ -137,7 +134,17 @@ class Repository:
                     if "duplicate column name" not in str(exc).lower():
                         raise
 
-            # This index must be created after old databases gain place_id.
+            # Create indexes only after migrations so older databases that
+            # predate these columns can still upgrade cleanly.
+            conn.execute(
+                "CREATE INDEX IF NOT EXISTS idx_leads_search ON leads(search_id)"
+            )
+            conn.execute(
+                "CREATE INDEX IF NOT EXISTS idx_leads_email ON leads(email)"
+            )
+            conn.execute(
+                "CREATE INDEX IF NOT EXISTS idx_searches_status ON searches(status)"
+            )
             conn.execute(
                 """
                 CREATE UNIQUE INDEX IF NOT EXISTS idx_leads_search_place
