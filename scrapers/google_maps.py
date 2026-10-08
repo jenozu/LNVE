@@ -176,6 +176,7 @@ class GoogleMapsScraper:
                 body = {
                     "textQuery": search_type,
                     "pageSize": _PAGE_SIZE,
+                    "includePureServiceAreaBusinesses": True,
                     "locationBias": {
                         "circle": {
                             "center": {
@@ -187,10 +188,14 @@ class GoogleMapsScraper:
                     },
                 }
 
-                # Let Google pre-filter obvious low-rating results, then apply
-                # the same threshold locally as a final guard.
+                # Google's minRating rounds UP to the nearest 0.5. Use the
+                # next-lower 0.5 step as a coarse server-side filter so a
+                # custom threshold such as 4.6 never drops valid 4.6–4.9
+                # prospects. LNVE applies the exact threshold locally below.
                 if min_rating > 0:
-                    body["minRating"] = min_rating
+                    api_min_rating = math.floor(min_rating * 2) / 2
+                    if api_min_rating > 0:
+                        body["minRating"] = api_min_rating
 
                 if page_token:
                     body["pageToken"] = page_token
