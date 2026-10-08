@@ -393,3 +393,5 @@ class Phase4LegacyMigrationTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+# Phase 4 CI verification marker.
