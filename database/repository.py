@@ -555,33 +555,86 @@ class Repository:
                 (email, contact_name, source, confidence, lead_id),
             )
 
-    def get_all_leads_for_export(self, limit: int = 5000) -> List[Dict]:
+    def get_leads_for_export(
+        self,
+        search_id: Optional[int] = None,
+        pool: str = "all",
+        limit: int = 5000,
+    ) -> List[Dict]:
         """
-        Legacy export shape retained until Phase 4 expands the CSV.
-        For now, the all-leads export still returns the immediate no-site pool.
+        Return final MVP export rows.
+
+        pool:
+        - all
+        - no_website
+        - website_audit
         """
+        pool = (pool or "all").lower()
+        if pool not in {"all", "no_website", "website_audit"}:
+            raise ValueError(f"Invalid export pool: {pool}")
+
+        where = []
+        params: List[Any] = []
+
+        if search_id is not None:
+            where.append("l.search_id = ?")
+            params.append(search_id)
+
+        if pool == "no_website":
+            where.append("l.website_status = 'No Website Found'")
+        elif pool == "website_audit":
+            where.append("l.website_status = 'Has Website'")
+
+        where_sql = f"WHERE {' AND '.join(where)}" if where else ""
+        params.append(limit)
+
         with _connect(self.db_path) as conn:
             rows = conn.execute(
-                """
+                f"""
                 SELECT
-                    l.business_name, l.address, l.phone_number,
-                    COALESCE(l.email, '')                AS email,
-                    COALESCE(l.contact_name, '')         AS contact_name,
-                    l.source,
-                    COALESCE(l.enrichment_source, '')    AS enrichment_source,
-                    COALESCE(l.enrichment_confidence, 0) AS enrichment_confidence,
+                    l.id,
+                    l.search_id,
+                    l.place_id,
+                    l.business_name,
+                    l.rating,
+                    l.review_count,
+                    COALESCE(l.website_url, '') AS website_url,
+                    l.website_status,
+                    COALESCE(l.website_condition, 'UNREVIEWED') AS website_condition,
+                    COALESCE(l.audit_notes, '') AS audit_notes,
+                    COALESCE(l.phone_number, '') AS phone_number,
+                    COALESCE(l.address, '') AS address,
+                    COALESCE(l.google_maps_url, '') AS google_maps_url,
+                    COALESCE(l.business_status, '') AS business_status,
+                    l.latitude,
+                    l.longitude,
+                    l.audited_at,
                     l.created_at,
                     s.search_type,
-                    s.location_name
+                    s.location_name,
+                    s.radius_km,
+                    s.min_rating,
+                    s.min_reviews
                 FROM leads l
                 JOIN searches s ON l.search_id = s.id
-                WHERE l.website_status = 'No Website Found'
-                ORDER BY l.created_at DESC
+                {where_sql}
+                ORDER BY
+                    CASE l.website_status
+                        WHEN 'No Website Found' THEN 0
+                        ELSE 1
+                    END,
+                    l.review_count DESC,
+                    l.rating DESC,
+                    l.business_name
                 LIMIT ?
                 """,
-                (limit,),
+                tuple(params),
             ).fetchall()
             return [dict(r) for r in rows]
+
+    def get_all_leads_for_export(self, limit: int = 5000) -> List[Dict]:
+        """Backward-compatible alias for the final all-prospect export."""
+        return self.get_leads_for_export(limit=limit)
 
     # ── Legacy analytics compatibility ────────────────────────
 
