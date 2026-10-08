@@ -11,7 +11,7 @@ The finished MVP will search Google Places for strong local businesses and separ
 
 The refactor is being completed one phase at a time.
 
-## Current status: Phase 3 complete
+## Current status: MVP refactor complete (Phase 4)
 
 Phase 1 reduced the active application to the minimum foundation:
 
@@ -117,11 +117,18 @@ Complete:
 - repository and route tests for pool separation and audit updates
 
 ### Phase 4 — CSV export + final verification
-Next:
-- export final prospect fields for both pools
-- final end-to-end smoke tests
-- final migration/startup checks
-- final local run instructions
+Complete:
+- CSV export for all prospects
+- CSV export for **No Website** only
+- CSV export for **Website Audit Queue** only
+- search-specific exports
+- rating, reviews, website, audit condition/notes, phone, address, Maps URL, Place ID, business status, search criteria, coordinates, and timestamps included
+- mocked Google Places end-to-end prospect test
+- pre-refactor database → final schema migration test
+- Phase 3 workflow regression tests
+- active Python module compilation
+- Flask startup/import verification
+- final GitHub Actions verification: 20/20 active tests passed
 
 ## Environment variables
 
@@ -152,3 +159,41 @@ You can also save a short note such as:
 `slow mobile, outdated design, weak quote CTA`
 
 This intentionally remains manual in the MVP. Automated PageSpeed/Lighthouse/AI audits are postponed until the outreach process is validated.
+
+
+## Final MVP workflow
+
+1. Enter a high-ticket business niche and location.
+2. Set minimum rating and minimum review count.
+3. Run the Google Places search.
+4. Review **No Website** prospects for immediate outreach.
+5. Review **Website Audit Queue** prospects and record the site's condition plus a short audit note.
+6. Export all prospects or either pool to CSV.
+
+### CSV export options
+
+From the Results page or an individual search, you can export:
+
+- **All**
+- **No Website**
+- **Audit Queue**
+
+The CSV includes the prospect type and all qualification/audit data needed for manual outreach.
+
+## Verification
+
+GitHub Actions verifies the active MVP with:
+
+- Phase 3 prospect-pool and audit tests
+- Phase 4 export and end-to-end tests
+- Python syntax compilation
+- Flask app startup/import
+
+The final Phase 4 verification passed **20/20 active tests**.
+
+## Preserved versions
+
+- `pre-mvp-refactor` — original advanced LNVE before the lean refactor
+- `phase2-complete` — completed Google prospect-search phase
+- `phase3-complete` — completed prospect-pool/manual-audit phase
+- `phase4-complete` — final verified lean MVP
