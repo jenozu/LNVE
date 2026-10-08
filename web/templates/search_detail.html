@@ -22,27 +22,32 @@
     </div>
     <div class="col-md-3">
         <div class="stat-card stat-green text-center">
-            <div class="fs-2 fw-bold">{{ '%.1f'|format(search.min_rating or 0) }}+</div>
-            <div class="small opacity-75">Minimum Rating</div>
+            <div class="fs-2 fw-bold">{{ no_website_leads|length }}</div>
+            <div class="small opacity-75">No Website</div>
         </div>
     </div>
     <div class="col-md-3">
         <div class="stat-card stat-purple text-center">
-            <div class="fs-2 fw-bold">{{ search.min_reviews or 0 }}+</div>
-            <div class="small opacity-75">Minimum Reviews</div>
+            <div class="fs-2 fw-bold">{{ website_leads|length }}</div>
+            <div class="small opacity-75">Audit Queue</div>
         </div>
     </div>
     <div class="col-md-3">
         <div class="stat-card stat-blue text-center">
-            <div class="fs-5 fw-bold">{{ search.radius_km }} km</div>
-            <div class="small opacity-75">Search Radius</div>
+            <div class="fs-6 fw-bold">
+                {{ '%.1f'|format(search.min_rating or 0) }}+ / {{ search.min_reviews or 0 }}+
+            </div>
+            <div class="small opacity-75">Rating / Reviews</div>
         </div>
     </div>
 </div>
 
 <div class="card mb-4">
     <div class="card-header py-3 d-flex justify-content-between align-items-center">
-        <span><i class="fas fa-users me-2"></i>Prospects ({{ leads|length }})</span>
+        <span>
+            <i class="fas fa-plus-circle me-2 text-success"></i>
+            No Website — Immediate Outreach ({{ no_website_leads|length }})
+        </span>
         <a href="{{ url_for('export.export_csv', search_id=search.id) }}"
            class="btn btn-outline-success btn-sm">
             <i class="fas fa-download me-1"></i>Export This Search
@@ -56,36 +61,17 @@
                         <th>Business</th>
                         <th>Rating</th>
                         <th>Reviews</th>
-                        <th>Website</th>
                         <th>Phone</th>
                         <th>Address</th>
                         <th>Maps</th>
                     </tr>
                 </thead>
                 <tbody>
-                {% for l in leads %}
+                {% for l in no_website_leads %}
                 <tr>
-                    <td>
-                        <strong>{{ l.business_name }}</strong>
-                        {% if l.business_status and l.business_status != 'OPERATIONAL' %}
-                            <br><small class="text-muted">{{ l.business_status }}</small>
-                        {% endif %}
-                    </td>
-                    <td>
-                        {% if l.rating is not none %}
-                            <strong>{{ '%.1f'|format(l.rating) }}</strong>
-                        {% else %}—{% endif %}
-                    </td>
+                    <td><strong>{{ l.business_name }}</strong></td>
+                    <td>{{ '%.1f'|format(l.rating) if l.rating is not none else '—' }}</td>
                     <td>{{ l.review_count or 0 }}</td>
-                    <td class="small">
-                        {% if l.website_url %}
-                            <a href="{{ l.website_url }}" target="_blank" rel="noopener">
-                                Open website <i class="fas fa-external-link-alt ms-1"></i>
-                            </a>
-                        {% else %}
-                            <span class="badge bg-success">No website</span>
-                        {% endif %}
-                    </td>
                     <td class="small">{{ l.phone_number or '—' }}</td>
                     <td class="small">{{ l.address or '—' }}</td>
                     <td class="small">
@@ -95,9 +81,93 @@
                     </td>
                 </tr>
                 {% else %}
-                <tr><td colspan="7" class="text-center text-muted py-4">
-                    No qualified prospects found.
-                </td></tr>
+                <tr>
+                    <td colspan="6" class="text-center text-muted py-4">
+                        No qualifying no-website prospects found in this search.
+                    </td>
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="card mb-4">
+    <div class="card-header py-3">
+        <i class="fas fa-clipboard-check me-2 text-primary"></i>
+        Website Audit Queue ({{ website_leads|length }})
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Business</th>
+                        <th>Rating</th>
+                        <th>Reviews</th>
+                        <th>Website</th>
+                        <th style="min-width: 360px;">Manual Audit</th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for l in website_leads %}
+                <tr>
+                    <td>
+                        <strong>{{ l.business_name }}</strong>
+                        <br><small class="text-muted">{{ l.phone_number or '' }}</small>
+                    </td>
+                    <td>{{ '%.1f'|format(l.rating) if l.rating is not none else '—' }}</td>
+                    <td>{{ l.review_count or 0 }}</td>
+                    <td class="small">
+                        <a href="{{ l.website_url }}" target="_blank" rel="noopener">
+                            Open website <i class="fas fa-external-link-alt ms-1"></i>
+                        </a>
+                        {% if l.google_maps_url %}
+                            <br><a href="{{ l.google_maps_url }}" target="_blank" rel="noopener">Google Maps</a>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <form method="POST"
+                              action="{{ url_for('results.update_audit', lead_id=l.id) }}"
+                              class="row g-2">
+                            <div class="col-md-4">
+                                <select class="form-select form-select-sm" name="website_condition">
+                                    {% set current = l.website_condition or 'UNREVIEWED' %}
+                                    <option value="UNREVIEWED" {% if current == 'UNREVIEWED' %}selected{% endif %}>Unreviewed</option>
+                                    <option value="SEVERE" {% if current == 'SEVERE' %}selected{% endif %}>Severely poor</option>
+                                    <option value="POOR" {% if current == 'POOR' %}selected{% endif %}>Poor</option>
+                                    <option value="AVERAGE" {% if current == 'AVERAGE' %}selected{% endif %}>Average / improvable</option>
+                                    <option value="GOOD" {% if current == 'GOOD' %}selected{% endif %}>Good</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <input type="text"
+                                       class="form-control form-control-sm"
+                                       name="audit_notes"
+                                       value="{{ l.audit_notes or '' }}"
+                                       maxlength="500"
+                                       placeholder="e.g. slow mobile, weak CTA, outdated design">
+                            </div>
+                            <div class="col-md-2 d-grid">
+                                <button class="btn btn-outline-primary btn-sm" type="submit">
+                                    Save
+                                </button>
+                            </div>
+                            {% if l.audited_at %}
+                            <div class="col-12">
+                                <small class="text-muted">Reviewed {{ l.audited_at[:16] }}</small>
+                            </div>
+                            {% endif %}
+                        </form>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="5" class="text-center text-muted py-4">
+                        No qualifying website prospects found in this search.
+                    </td>
+                </tr>
                 {% endfor %}
                 </tbody>
             </table>
