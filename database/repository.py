@@ -54,6 +54,9 @@ CREATE TABLE IF NOT EXISTS leads (
     google_maps_url         TEXT,
     latitude                REAL,
     longitude               REAL,
+    website_condition       TEXT    NOT NULL DEFAULT 'UNREVIEWED',
+    audit_notes             TEXT,
+    audited_at              TIMESTAMP,
     source                  TEXT    NOT NULL DEFAULT 'google_maps',
     email                   TEXT,
     contact_name            TEXT,
@@ -95,6 +98,11 @@ _SAFE_MIGRATIONS = [
     "ALTER TABLE leads ADD COLUMN google_maps_url TEXT",
     "ALTER TABLE leads ADD COLUMN latitude REAL",
     "ALTER TABLE leads ADD COLUMN longitude REAL",
+
+    # Phase 3 manual website-audit fields.
+    "ALTER TABLE leads ADD COLUMN website_condition TEXT NOT NULL DEFAULT 'UNREVIEWED'",
+    "ALTER TABLE leads ADD COLUMN audit_notes TEXT",
+    "ALTER TABLE leads ADD COLUMN audited_at TIMESTAMP",
 ]
 
 
@@ -151,6 +159,14 @@ class Repository:
                 ON leads(search_id, place_id)
                 WHERE place_id IS NOT NULL
                 """
+            )
+            conn.execute(
+                "CREATE INDEX IF NOT EXISTS idx_leads_website_status "
+                "ON leads(website_status)"
+            )
+            conn.execute(
+                "CREATE INDEX IF NOT EXISTS idx_leads_website_condition "
+                "ON leads(website_condition)"
             )
 
         logger.info("Database initialised: %s", self.db_path)
@@ -403,6 +419,104 @@ class Repository:
                 (limit,),
             ).fetchall()
             return [dict(r) for r in rows]
+
+    def get_lead(self, lead_id: int) -> Optional[Dict]:
+        with _connect(self.db_path) as conn:
+            row = conn.execute(
+                "SELECT * FROM leads WHERE id = ?",
+                (lead_id,),
+            ).fetchone()
+            return dict(row) if row else None
+
+    def get_leads_for_search_by_pool(
+        self,
+        search_id: int,
+        has_website: bool,
+    ) -> List[Dict]:
+        status = "Has Website" if has_website else "No Website Found"
+        with _connect(self.db_path) as conn:
+            rows = conn.execute(
+                """
+                SELECT *
+                FROM leads
+                WHERE search_id = ? AND website_status = ?
+                ORDER BY review_count DESC, rating DESC, business_name
+                """,
+                (search_id, status),
+            ).fetchall()
+            return [dict(r) for r in rows]
+
+    def get_recent_leads_by_pool(
+        self,
+        has_website: bool,
+        limit: int = 25,
+    ) -> List[Dict]:
+        status = "Has Website" if has_website else "No Website Found"
+        with _connect(self.db_path) as conn:
+            rows = conn.execute(
+                """
+                SELECT l.*, s.search_type, s.location_name
+                FROM leads l
+                JOIN searches s ON l.search_id = s.id
+                WHERE l.website_status = ?
+                ORDER BY l.created_at DESC, l.id DESC
+                LIMIT ?
+                """,
+                (status, limit),
+            ).fetchall()
+            return [dict(r) for r in rows]
+
+    def update_website_audit(
+        self,
+        lead_id: int,
+        website_condition: str,
+        audit_notes: str = "",
+    ) -> bool:
+        """
+        Save the lightweight manual audit for an existing website prospect.
+
+        website_condition is one of:
+        UNREVIEWED, SEVERE, POOR, AVERAGE, GOOD.
+        """
+        condition = (website_condition or "UNREVIEWED").upper()
+        allowed = {"UNREVIEWED", "SEVERE", "POOR", "AVERAGE", "GOOD"}
+        if condition not in allowed:
+            raise ValueError(f"Invalid website condition: {website_condition}")
+
+        notes = (audit_notes or "").strip()
+
+        with _connect(self.db_path) as conn:
+            row = conn.execute(
+                "SELECT website_status FROM leads WHERE id = ?",
+                (lead_id,),
+            ).fetchone()
+            if not row or row["website_status"] != "Has Website":
+                return False
+
+            if condition == "UNREVIEWED":
+                cur = conn.execute(
+                    """
+                    UPDATE leads
+                    SET website_condition = 'UNREVIEWED',
+                        audit_notes = ?,
+                        audited_at = NULL
+                    WHERE id = ?
+                    """,
+                    (notes, lead_id),
+                )
+            else:
+                cur = conn.execute(
+                    """
+                    UPDATE leads
+                    SET website_condition = ?,
+                        audit_notes = ?,
+                        audited_at = CURRENT_TIMESTAMP
+                    WHERE id = ?
+                    """,
+                    (condition, notes, lead_id),
+                )
+
+            return cur.rowcount > 0
 
     # ── Legacy enrichment compatibility ───────────────────────
 
