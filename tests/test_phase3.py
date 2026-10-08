@@ -12,6 +12,8 @@ from flask import Flask
 from config import settings
 from database.repository import Repository
 from web.routes.results import bp as results_bp
+from web.routes.search import bp as search_bp
+from web.routes.export import bp as export_bp
 
 
 class Phase3RepositoryTests(unittest.TestCase):
@@ -222,7 +224,9 @@ class Phase3RouteTests(unittest.TestCase):
         )
         app = Flask(__name__, template_folder=template_folder)
         app.secret_key = "test-secret"
+        app.register_blueprint(search_bp)
         app.register_blueprint(results_bp)
+        app.register_blueprint(export_bp)
         self.client = app.test_client()
 
     def tearDown(self):
