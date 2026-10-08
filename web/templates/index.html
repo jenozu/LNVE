@@ -2,7 +2,7 @@
 {% block title %}Search{% endblock %}
 
 {% block content %}
-<h1 class="mb-4"><i class="fas fa-search me-2 text-primary"></i>New Search</h1>
+<h1 class="mb-4"><i class="fas fa-search me-2 text-primary"></i>Find Prospects</h1>
 
 <div class="row g-4">
     <div class="col-lg-7">
@@ -15,7 +15,7 @@
                     <div class="mb-3">
                         <label class="form-label fw-semibold">Business Type</label>
                         <select class="form-select" name="search_type">
-                            <option value="">Select a type…</option>
+                            <option value="">Select a high-ticket niche…</option>
                             {% for value, label in search_types %}
                             <option value="{{ value }}">{{ label }}</option>
                             {% endfor %}
@@ -28,7 +28,7 @@
                             Custom Keyword <span class="text-muted">(overrides dropdown)</span>
                         </label>
                         <input type="text" class="form-control" name="custom_type"
-                               placeholder="e.g. waterproofing contractor, interlock contractor">
+                               placeholder="e.g. basement renovation contractor">
                     </div>
 
                     <div class="mb-3">
@@ -38,19 +38,35 @@
                                placeholder="City name, address, or lat,lng">
                     </div>
 
-                    <div class="mb-4">
-                        <label class="form-label fw-semibold">Radius (km)</label>
-                        <input type="number" class="form-control" name="radius"
-                               value="25" min="1" max="100" required>
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label class="form-label fw-semibold">Radius (km)</label>
+                            <input type="number" class="form-control" name="radius"
+                                   value="25" min="1" max="50" step="1" required>
+                        </div>
+
+                        <div class="col-md-4">
+                            <label class="form-label fw-semibold">Minimum Rating</label>
+                            <input type="number" class="form-control" name="min_rating"
+                                   value="4.5" min="0" max="5" step="0.1" required>
+                        </div>
+
+                        <div class="col-md-4">
+                            <label class="form-label fw-semibold">Minimum Reviews</label>
+                            <input type="number" class="form-control" name="min_reviews"
+                                   value="30" min="0" step="1" required>
+                        </div>
                     </div>
 
-                    <div class="alert alert-light border small">
+                    <div class="alert alert-light border small mt-4">
                         <i class="fab fa-google me-1"></i>
-                        This lean MVP currently uses Google Places only.
+                        Google Places will keep qualifying businesses whether they
+                        have a website or not. Website prospects will be split into
+                        the audit queue in Phase 3.
                     </div>
 
                     <button type="submit" class="btn btn-primary btn-lg w-100">
-                        <i class="fas fa-play me-2"></i>Start Search
+                        <i class="fas fa-play me-2"></i>Find Prospects
                     </button>
                 </form>
             </div>
@@ -61,28 +77,33 @@
         <div class="row g-3">
             <div class="col-12">
                 <div class="stat-card stat-blue">
-                    <i class="fab fa-google fa-2x mb-2 opacity-75"></i>
-                    <h6>Google Places</h6>
+                    <i class="fas fa-star fa-2x mb-2 opacity-75"></i>
+                    <h6>Quality First</h6>
                     <p class="mb-0 small opacity-75">
-                        One reliable discovery source while we validate the core lead-finding workflow.
+                        Filter for businesses with strong ratings and enough reviews
+                        to show an established reputation.
                     </p>
                 </div>
             </div>
+
             <div class="col-12">
                 <div class="stat-card stat-green">
-                    <i class="fas fa-bullseye fa-2x mb-2 opacity-75"></i>
-                    <h6>Focused MVP</h6>
+                    <i class="fas fa-globe fa-2x mb-2 opacity-75"></i>
+                    <h6>Both Prospect Types</h6>
                     <p class="mb-0 small opacity-75">
-                        Search, review results, and export leads without enrichment or scraping dependencies.
+                        Keep no-site prospects and businesses with websites that may
+                        be candidates for a rebuild.
                     </p>
                 </div>
             </div>
+
             <div class="col-12">
                 <div class="stat-card stat-purple">
-                    <i class="fas fa-file-csv fa-2x mb-2 opacity-75"></i>
-                    <h6>CSV Export</h6>
+                    <i class="fas fa-map-marker-alt fa-2x mb-2 opacity-75"></i>
+                    <h6>Local Radius Check</h6>
                     <p class="mb-0 small opacity-75">
-                        Export discovered prospects for manual review and outreach.
+                        Results are checked against your chosen search radius before
+                        they are stored.
                     </p>
                 </div>
             </div>
