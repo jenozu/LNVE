@@ -21,9 +21,9 @@
                         <th>Type</th>
                         <th>Location</th>
                         <th>Radius</th>
+                        <th>Filters</th>
                         <th>Status</th>
-                        <th>Google</th>
-                        <th>Total Leads</th>
+                        <th>Prospects</th>
                         <th>Started</th>
                         <th></th>
                     </tr>
@@ -34,14 +34,12 @@
                     <td><strong>{{ s.search_type }}</strong></td>
                     <td>{{ s.location_name }}</td>
                     <td>{{ s.radius_km }} km</td>
-                    <td>
-                        <span class="status-badge status-{{ s.status }}">{{ s.status }}</span>
+                    <td class="small">
+                        {{ '%.1f'|format(s.min_rating or 0) }}+ stars<br>
+                        {{ s.min_reviews or 0 }}+ reviews
                     </td>
                     <td>
-                        <span class="status-badge status-{{ s.gmaps_status }}">
-                            {{ s.gmaps_status }}
-                            {% if s.gmaps_leads %} ({{ s.gmaps_leads }}){% endif %}
-                        </span>
+                        <span class="status-badge status-{{ s.status }}">{{ s.status }}</span>
                     </td>
                     <td><strong>{{ s.total_leads }}</strong></td>
                     <td class="text-muted small">{{ (s.created_at or '')[:16] }}</td>
@@ -76,7 +74,7 @@
 
 <div class="card">
     <div class="card-header py-3 d-flex justify-content-between">
-        <span><i class="fas fa-star me-2"></i>Recent Leads</span>
+        <span><i class="fas fa-star me-2"></i>Recent Qualified Prospects</span>
         <span class="text-muted small">{{ leads|length }} shown</span>
     </div>
     <div class="card-body p-0">
@@ -85,21 +83,41 @@
                 <thead class="table-light">
                     <tr>
                         <th>Business</th>
-                        <th>Address</th>
+                        <th>Rating</th>
+                        <th>Reviews</th>
+                        <th>Website</th>
                         <th>Phone</th>
-                        <th>Found</th>
+                        <th>Location</th>
                     </tr>
                 </thead>
                 <tbody>
                 {% for l in leads %}
                 <tr>
                     <td><strong>{{ l.business_name }}</strong></td>
-                    <td class="small">{{ l.address or '—' }}</td>
+                    <td>
+                        {% if l.rating is not none %}
+                            <strong>{{ '%.1f'|format(l.rating) }}</strong>
+                        {% else %}—{% endif %}
+                    </td>
+                    <td>{{ l.review_count or 0 }}</td>
+                    <td class="small">
+                        {% if l.website_url %}
+                            <a href="{{ l.website_url }}" target="_blank" rel="noopener">
+                                Website <i class="fas fa-external-link-alt ms-1"></i>
+                            </a>
+                        {% else %}
+                            <span class="badge bg-success">No website</span>
+                        {% endif %}
+                    </td>
                     <td class="small">{{ l.phone_number or '—' }}</td>
-                    <td class="text-muted small">{{ (l.created_at or '')[:16] }}</td>
+                    <td class="small">{{ l.address or '—' }}</td>
                 </tr>
                 {% else %}
-                <tr><td colspan="4" class="text-center text-muted py-4">No leads yet.</td></tr>
+                <tr>
+                    <td colspan="6" class="text-center text-muted py-4">
+                        No qualified prospects yet.
+                    </td>
+                </tr>
                 {% endfor %}
                 </tbody>
             </table>
