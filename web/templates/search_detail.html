@@ -14,20 +14,26 @@
 </div>
 
 <div class="row g-3 mb-4">
-    <div class="col-md-4">
+    <div class="col-md-3">
         <div class="stat-card stat-blue text-center">
             <div class="fs-2 fw-bold">{{ search.total_leads }}</div>
-            <div class="small opacity-75">Total Leads</div>
+            <div class="small opacity-75">Qualified Prospects</div>
         </div>
     </div>
-    <div class="col-md-4">
+    <div class="col-md-3">
         <div class="stat-card stat-green text-center">
-            <div class="fs-2 fw-bold">{{ search.gmaps_leads }}</div>
-            <div class="small opacity-75">Google Leads</div>
+            <div class="fs-2 fw-bold">{{ '%.1f'|format(search.min_rating or 0) }}+</div>
+            <div class="small opacity-75">Minimum Rating</div>
         </div>
     </div>
-    <div class="col-md-4">
+    <div class="col-md-3">
         <div class="stat-card stat-purple text-center">
+            <div class="fs-2 fw-bold">{{ search.min_reviews or 0 }}+</div>
+            <div class="small opacity-75">Minimum Reviews</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card stat-blue text-center">
             <div class="fs-5 fw-bold">{{ search.radius_km }} km</div>
             <div class="small opacity-75">Search Radius</div>
         </div>
@@ -36,7 +42,7 @@
 
 <div class="card mb-4">
     <div class="card-header py-3 d-flex justify-content-between align-items-center">
-        <span><i class="fas fa-users me-2"></i>Leads ({{ leads|length }})</span>
+        <span><i class="fas fa-users me-2"></i>Prospects ({{ leads|length }})</span>
         <a href="{{ url_for('export.export_csv', search_id=search.id) }}"
            class="btn btn-outline-success btn-sm">
             <i class="fas fa-download me-1"></i>Export This Search
@@ -48,19 +54,50 @@
                 <thead class="table-light">
                     <tr>
                         <th>Business</th>
-                        <th>Address</th>
+                        <th>Rating</th>
+                        <th>Reviews</th>
+                        <th>Website</th>
                         <th>Phone</th>
+                        <th>Address</th>
+                        <th>Maps</th>
                     </tr>
                 </thead>
                 <tbody>
                 {% for l in leads %}
                 <tr>
-                    <td><strong>{{ l.business_name }}</strong></td>
-                    <td class="small">{{ l.address or '—' }}</td>
+                    <td>
+                        <strong>{{ l.business_name }}</strong>
+                        {% if l.business_status and l.business_status != 'OPERATIONAL' %}
+                            <br><small class="text-muted">{{ l.business_status }}</small>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if l.rating is not none %}
+                            <strong>{{ '%.1f'|format(l.rating) }}</strong>
+                        {% else %}—{% endif %}
+                    </td>
+                    <td>{{ l.review_count or 0 }}</td>
+                    <td class="small">
+                        {% if l.website_url %}
+                            <a href="{{ l.website_url }}" target="_blank" rel="noopener">
+                                Open website <i class="fas fa-external-link-alt ms-1"></i>
+                            </a>
+                        {% else %}
+                            <span class="badge bg-success">No website</span>
+                        {% endif %}
+                    </td>
                     <td class="small">{{ l.phone_number or '—' }}</td>
+                    <td class="small">{{ l.address or '—' }}</td>
+                    <td class="small">
+                        {% if l.google_maps_url %}
+                            <a href="{{ l.google_maps_url }}" target="_blank" rel="noopener">Maps</a>
+                        {% else %}—{% endif %}
+                    </td>
                 </tr>
                 {% else %}
-                <tr><td colspan="3" class="text-center text-muted py-4">No leads found.</td></tr>
+                <tr><td colspan="7" class="text-center text-muted py-4">
+                    No qualified prospects found.
+                </td></tr>
                 {% endfor %}
                 </tbody>
             </table>
