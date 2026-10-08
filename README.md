@@ -11,7 +11,7 @@ The finished MVP will search Google Places for strong local businesses and separ
 
 The refactor is being completed one phase at a time.
 
-## Current status: Phase 1 complete
+## Current status: Phase 2 complete
 
 Phase 1 reduced the active application to the minimum foundation:
 
@@ -93,16 +93,21 @@ Open:
 Complete.
 
 ### Phase 2 — Google prospect search
-Next:
-- current Places API search flow
+Complete:
+- Places API (New) Text Search flow
 - rating and review-count filters
 - business website URL
 - Place ID
 - business status
 - phone and address
-- store both website and no-website prospects
+- Google Maps URL and coordinates
+- up to three pages / 60 Google results per search
+- pure service-area businesses included
+- local radius validation
+- stores both website and no-website prospects
 
 ### Phase 3 — Two prospect pools
+Next:
 - No Website
 - Website Audit Queue
 - manual website-condition review
