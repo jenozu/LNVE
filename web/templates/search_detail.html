@@ -14,28 +14,22 @@
 </div>
 
 <div class="row g-3 mb-4">
-    <div class="col-md-3">
+    <div class="col-md-4">
         <div class="stat-card stat-blue text-center">
             <div class="fs-2 fw-bold">{{ search.total_leads }}</div>
             <div class="small opacity-75">Total Leads</div>
         </div>
     </div>
-    <div class="col-md-3">
+    <div class="col-md-4">
         <div class="stat-card stat-green text-center">
             <div class="fs-2 fw-bold">{{ search.gmaps_leads }}</div>
-            <div class="small opacity-75">Google Maps</div>
+            <div class="small opacity-75">Google Leads</div>
         </div>
     </div>
-    <div class="col-md-3">
-        <div class="stat-card stat-orange text-center">
-            <div class="fs-2 fw-bold">{{ search.yellowpages_leads }}</div>
-            <div class="small opacity-75">Yellow Pages</div>
-        </div>
-    </div>
-    <div class="col-md-3">
+    <div class="col-md-4">
         <div class="stat-card stat-purple text-center">
-            <div class="fs-2 fw-bold">{{ enriched_count }}</div>
-            <div class="small opacity-75">Emails Found</div>
+            <div class="fs-5 fw-bold">{{ search.radius_km }} km</div>
+            <div class="small opacity-75">Search Radius</div>
         </div>
     </div>
 </div>
@@ -56,9 +50,6 @@
                         <th>Business</th>
                         <th>Address</th>
                         <th>Phone</th>
-                        <th>Email</th>
-                        <th>Contact</th>
-                        <th>Source</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -67,27 +58,9 @@
                     <td><strong>{{ l.business_name }}</strong></td>
                     <td class="small">{{ l.address or '—' }}</td>
                     <td class="small">{{ l.phone_number or '—' }}</td>
-                    <td class="small">
-                        {% if l.email %}
-                            <a href="mailto:{{ l.email }}">{{ l.email }}</a>
-                            {% if l.enrichment_confidence %}
-                            <span class="badge bg-light text-secondary ms-1">
-                                {{ l.enrichment_confidence }}%
-                            </span>
-                            {% endif %}
-                        {% else %}—{% endif %}
-                    </td>
-                    <td class="small">{{ l.contact_name or '—' }}</td>
-                    <td>
-                        {% if l.source == 'google_maps' %}
-                        <span class="badge bg-danger bg-opacity-75">Google</span>
-                        {% else %}
-                        <span class="badge bg-warning text-dark">YP</span>
-                        {% endif %}
-                    </td>
                 </tr>
                 {% else %}
-                <tr><td colspan="6" class="text-center text-muted py-4">No leads found.</td></tr>
+                <tr><td colspan="3" class="text-center text-muted py-4">No leads found.</td></tr>
                 {% endfor %}
                 </tbody>
             </table>
