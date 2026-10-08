@@ -2,7 +2,7 @@
 {% block title %}Search #{{ search.id }}{% endblock %}
 
 {% block content %}
-<div class="d-flex align-items-center gap-3 mb-4">
+<div class="d-flex align-items-center gap-3 mb-4 flex-wrap">
     <a href="{{ url_for('results.results') }}" class="btn btn-outline-secondary btn-sm">
         <i class="fas fa-arrow-left me-1"></i>Back
     </a>
@@ -11,6 +11,10 @@
         {{ search.search_type }} — {{ search.location_name }}
     </h1>
     <span class="status-badge status-{{ search.status }}">{{ search.status }}</span>
+    <a href="{{ url_for('export.export_csv', search_id=search.id) }}"
+       class="btn btn-outline-success btn-sm ms-auto">
+        <i class="fas fa-download me-1"></i>Export This Search
+    </a>
 </div>
 
 <div class="row g-3 mb-4">
@@ -43,15 +47,9 @@
 </div>
 
 <div class="card mb-4">
-    <div class="card-header py-3 d-flex justify-content-between align-items-center">
-        <span>
-            <i class="fas fa-plus-circle me-2 text-success"></i>
-            No Website — Immediate Outreach ({{ no_website_leads|length }})
-        </span>
-        <a href="{{ url_for('export.export_csv', search_id=search.id) }}"
-           class="btn btn-outline-success btn-sm">
-            <i class="fas fa-download me-1"></i>Export This Search
-        </a>
+    <div class="card-header py-3">
+        <i class="fas fa-plus-circle me-2 text-success"></i>
+        No Website — Immediate Outreach ({{ no_website_leads|length }})
     </div>
     <div class="card-body p-0">
         <div class="table-responsive">
