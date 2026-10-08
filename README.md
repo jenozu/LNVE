@@ -11,7 +11,7 @@ The finished MVP will search Google Places for strong local businesses and separ
 
 The refactor is being completed one phase at a time.
 
-## Current status: Phase 2 complete
+## Current status: Phase 3 complete
 
 Phase 1 reduced the active application to the minimum foundation:
 
@@ -107,15 +107,20 @@ Complete:
 - stores both website and no-website prospects
 
 ### Phase 3 — Two prospect pools
-Next:
-- No Website
-- Website Audit Queue
-- manual website-condition review
+Complete:
+- **No Website** pool for immediate outreach
+- **Website Audit Queue** for rebuild prospects
+- manual website condition: Unreviewed / Severely poor / Poor / Average / Good
+- short audit notes for outreach observations
+- audit timestamp
+- safe Phase 2 → Phase 3 database migration
+- repository and route tests for pool separation and audit updates
 
-### Phase 4 — CSV export + verification
-- export final prospect fields
-- smoke tests
-- database migration checks
+### Phase 4 — CSV export + final verification
+Next:
+- export final prospect fields for both pools
+- final end-to-end smoke tests
+- final migration/startup checks
 - final local run instructions
 
 ## Environment variables
@@ -130,3 +135,20 @@ Next:
 ## Notes
 
 Do not commit your `.env` file. It is already covered by `.gitignore`.
+
+
+## Website audit workflow
+
+For businesses with an existing website, open the search detail page and review the site manually. LNVE lets you record:
+
+- **Unreviewed**
+- **Severely poor**
+- **Poor**
+- **Average / improvable**
+- **Good**
+
+You can also save a short note such as:
+
+`slow mobile, outdated design, weak quote CTA`
+
+This intentionally remains manual in the MVP. Automated PageSpeed/Lighthouse/AI audits are postponed until the outreach process is validated.
