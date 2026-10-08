@@ -11,10 +11,20 @@
         {{ search.search_type }} — {{ search.location_name }}
     </h1>
     <span class="status-badge status-{{ search.status }}">{{ search.status }}</span>
-    <a href="{{ url_for('export.export_csv', search_id=search.id) }}"
-       class="btn btn-outline-success btn-sm ms-auto">
-        <i class="fas fa-download me-1"></i>Export This Search
-    </a>
+    <div class="btn-group ms-auto">
+        <a href="{{ url_for('export.export_csv', search_id=search.id, pool='all') }}"
+           class="btn btn-outline-success btn-sm">
+            <i class="fas fa-download me-1"></i>All
+        </a>
+        <a href="{{ url_for('export.export_csv', search_id=search.id, pool='no_website') }}"
+           class="btn btn-outline-success btn-sm">
+            No Website
+        </a>
+        <a href="{{ url_for('export.export_csv', search_id=search.id, pool='website_audit') }}"
+           class="btn btn-outline-success btn-sm">
+            Audit Queue
+        </a>
+    </div>
 </div>
 
 <div class="row g-3 mb-4">
