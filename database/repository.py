@@ -483,7 +483,7 @@ class Repository:
         if condition not in allowed:
             raise ValueError(f"Invalid website condition: {website_condition}")
 
-        notes = (audit_notes or "").strip()
+        notes = (audit_notes or "").strip()[:500]
 
         with _connect(self.db_path) as conn:
             row = conn.execute(
