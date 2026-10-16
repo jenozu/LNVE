@@ -38,6 +38,9 @@ jobs:
       - name: Run Phase 4 verification suite
         run: python -m unittest discover -s tests -p "test_phase4.py" -v
 
+      - name: Verify Signal redesign and template contracts
+        run: python -m unittest discover -s tests -p "test_redesign.py" -v
+
       - name: Verify Flask app startup/import
         run: |
           rm -f /tmp/lnve-ci.db
