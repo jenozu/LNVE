@@ -54,6 +54,13 @@
       </div>
     </header>
     <main id="main-content" class="content">
+      {% if config.get('LNVE_DEMO_MODE') %}
+      <div class="flash flash-warning" role="note" style="margin-bottom:22px">
+        <span><i class="fa-solid fa-flask" style="margin-right:8px;color:var(--amber)" aria-hidden="true"></i>
+        <strong>Interactive preview</strong> — fictional businesses only. Google searches are disabled, and demo edits may reset.</span>
+        <a href="{{ url_for('results.results') }}" class="text-link" style="white-space:nowrap">Explore prospects ↗</a>
+      </div>
+      {% endif %}
       {% with messages = get_flashed_messages(with_categories=true) %}
       {% if messages %}
       <div class="flash-stack" aria-live="polite">
