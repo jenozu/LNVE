@@ -1,185 +1,92 @@
 {% extends "base.html" %}
-{% block title %}Search #{{ search.id }}{% endblock %}
-
+{% block title %}Search {{ search.id }}{% endblock %}
+{% block breadcrumb %}Search #{{ search.id }}{% endblock %}
 {% block content %}
-<div class="d-flex align-items-center gap-3 mb-4 flex-wrap">
-    <a href="{{ url_for('results.results') }}" class="btn btn-outline-secondary btn-sm">
-        <i class="fas fa-arrow-left me-1"></i>Back
-    </a>
-    <h1 class="mb-0">
-        <i class="fas fa-search me-2 text-primary"></i>
-        {{ search.search_type }} — {{ search.location_name }}
-    </h1>
-    <span class="status-badge status-{{ search.status }}">{{ search.status }}</span>
-    <div class="btn-group ms-auto">
-        <a href="{{ url_for('export.export_csv', search_id=search.id, pool='all') }}"
-           class="btn btn-outline-success btn-sm">
-            <i class="fas fa-download me-1"></i>All
-        </a>
-        <a href="{{ url_for('export.export_csv', search_id=search.id, pool='no_website') }}"
-           class="btn btn-outline-success btn-sm">
-            No Website
-        </a>
-        <a href="{{ url_for('export.export_csv', search_id=search.id, pool='website_audit') }}"
-           class="btn btn-outline-success btn-sm">
-            Audit Queue
-        </a>
-    </div>
+<a class="back-link" href="{{ url_for('results.results') }}"><i class="fa-solid fa-arrow-left" aria-hidden="true"></i> Back to prospects</a>
+<div class="page-heading" data-reveal>
+  <div>
+    <div class="page-eyebrow">03 / Search intelligence · #{{ search.id }}</div>
+    <h1 class="page-title">{{ search.search_type }}</h1>
+    <p class="page-intro" style="margin:0"><i class="fa-solid fa-location-dot" aria-hidden="true" style="color:var(--mint);margin-right:7px"></i>{{ search.location_name }} · {{ search.radius_km }} km radius <span class="pill status-{{ search.status }}" data-detail-search-status style="margin-left:9px">{{ search.status|capitalize }}</span></p>
+  </div>
+  <div class="btn-group">
+    <a class="btn btn-small btn-quiet" href="{{ url_for('export.export_csv', search_id=search.id, pool='all') }}"><i class="fa-solid fa-download" aria-hidden="true"></i> All CSV</a>
+    <a class="btn btn-small btn-quiet" href="{{ url_for('export.export_csv', search_id=search.id, pool='no_website') }}">No website CSV</a>
+    <a class="btn btn-small btn-quiet" href="{{ url_for('export.export_csv', search_id=search.id, pool='website_audit') }}">Audit CSV</a>
+  </div>
 </div>
-
-<div class="row g-3 mb-4">
-    <div class="col-md-3">
-        <div class="stat-card stat-blue text-center">
-            <div class="fs-2 fw-bold">{{ search.total_leads }}</div>
-            <div class="small opacity-75">Qualified Prospects</div>
-        </div>
+{% if search.status == 'running' %}
+<div class="search-status-running" data-running-banner data-search-detail-poll="{{ search.id }}" role="status">Discovery is in progress. Results will refresh when the search is complete.</div>
+{% endif %}
+<section class="data-grid" aria-label="Search summary" data-reveal>
+  <div class="panel metric"><span class="metric-label">Qualified prospects</span><span class="metric-value" data-detail-total>{{ search.total_leads }}</span><span class="metric-footer">Saved from this search</span></div>
+  <div class="panel metric"><span class="metric-label">No website</span><span class="metric-value">{{ no_website_leads|length }}</span><span class="metric-footer">Website creation opportunities</span></div>
+  <div class="panel metric"><span class="metric-label">Audit queue</span><span class="metric-value">{{ website_leads|length }}</span><span class="metric-footer">Websites available to inspect</span></div>
+  <div class="panel metric"><span class="metric-label">Search thresholds</span><span class="metric-value" style="font-size:clamp(19px,1.9vw,29px)">{{ '%.1f'|format(search.min_rating or 0) }}<span class="subtle">★ / </span>{{ search.min_reviews or 0 }}<span class="subtle">+</span></span><span class="metric-footer">Minimum rating / review count</span></div>
+</section>
+<section class="panel" data-reveal>
+  <div class="panel-head"><div><div class="section-label" style="margin-bottom:6px">Search {{ search.id }} / Results</div><h2>Prospect collections</h2></div><span class="pill pill-mint">{{ no_website_leads|length + website_leads|length }} saved in both pools</span></div>
+  <div class="toolbar">
+    <div class="tabs" role="tablist" aria-label="Search prospect category" data-tabs="search-pools">
+      <button id="tab-no-website" class="tab" type="button" role="tab" aria-controls="no-website" aria-selected="true" data-tab="no-website">No website <span class="tab-count">{{ no_website_leads|length }}</span></button>
+      <button id="tab-audit-queue" class="tab" type="button" role="tab" aria-controls="audit-queue" aria-selected="false" data-tab="audit-queue">Website audit queue <span class="tab-count">{{ website_leads|length }}</span></button>
     </div>
-    <div class="col-md-3">
-        <div class="stat-card stat-green text-center">
-            <div class="fs-2 fw-bold">{{ no_website_leads|length }}</div>
-            <div class="small opacity-75">No Website</div>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="stat-card stat-purple text-center">
-            <div class="fs-2 fw-bold">{{ website_leads|length }}</div>
-            <div class="small opacity-75">Audit Queue</div>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="stat-card stat-blue text-center">
-            <div class="fs-6 fw-bold">
-                {{ '%.1f'|format(search.min_rating or 0) }}+ / {{ search.min_reviews or 0 }}+
-            </div>
-            <div class="small opacity-75">Rating / Reviews</div>
-        </div>
-    </div>
-</div>
-
-<div class="card mb-4">
-    <div class="card-header py-3">
-        <i class="fas fa-plus-circle me-2 text-success"></i>
-        No Website — Immediate Outreach ({{ no_website_leads|length }})
-    </div>
-    <div class="card-body p-0">
-        <div class="table-responsive">
-            <table class="table table-hover mb-0">
-                <thead class="table-light">
-                    <tr>
-                        <th>Business</th>
-                        <th>Rating</th>
-                        <th>Reviews</th>
-                        <th>Phone</th>
-                        <th>Address</th>
-                        <th>Maps</th>
-                    </tr>
-                </thead>
-                <tbody>
-                {% for l in no_website_leads %}
-                <tr>
-                    <td><strong>{{ l.business_name }}</strong></td>
-                    <td>{{ '%.1f'|format(l.rating) if l.rating is not none else '—' }}</td>
-                    <td>{{ l.review_count or 0 }}</td>
-                    <td class="small">{{ l.phone_number or '—' }}</td>
-                    <td class="small">{{ l.address or '—' }}</td>
-                    <td class="small">
-                        {% if l.google_maps_url %}
-                            <a href="{{ l.google_maps_url }}" target="_blank" rel="noopener">Maps</a>
-                        {% else %}—{% endif %}
-                    </td>
-                </tr>
-                {% else %}
-                <tr>
-                    <td colspan="6" class="text-center text-muted py-4">
-                        No qualifying no-website prospects found in this search.
-                    </td>
-                </tr>
-                {% endfor %}
-                </tbody>
-            </table>
-        </div>
-    </div>
-</div>
-
-<div class="card mb-4">
-    <div class="card-header py-3">
-        <i class="fas fa-clipboard-check me-2 text-primary"></i>
-        Website Audit Queue ({{ website_leads|length }})
-    </div>
-    <div class="card-body p-0">
-        <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0">
-                <thead class="table-light">
-                    <tr>
-                        <th>Business</th>
-                        <th>Rating</th>
-                        <th>Reviews</th>
-                        <th>Website</th>
-                        <th style="min-width: 360px;">Manual Audit</th>
-                    </tr>
-                </thead>
-                <tbody>
-                {% for l in website_leads %}
-                <tr>
-                    <td>
-                        <strong>{{ l.business_name }}</strong>
-                        <br><small class="text-muted">{{ l.phone_number or '' }}</small>
-                    </td>
-                    <td>{{ '%.1f'|format(l.rating) if l.rating is not none else '—' }}</td>
-                    <td>{{ l.review_count or 0 }}</td>
-                    <td class="small">
-                        <a href="{{ l.website_url }}" target="_blank" rel="noopener">
-                            Open website <i class="fas fa-external-link-alt ms-1"></i>
-                        </a>
-                        {% if l.google_maps_url %}
-                            <br><a href="{{ l.google_maps_url }}" target="_blank" rel="noopener">Google Maps</a>
-                        {% endif %}
-                    </td>
-                    <td>
-                        <form method="POST"
-                              action="{{ url_for('results.update_audit', lead_id=l.id) }}"
-                              class="row g-2">
-                            <div class="col-md-4">
-                                <select class="form-select form-select-sm" name="website_condition">
-                                    {% set current = l.website_condition or 'UNREVIEWED' %}
-                                    <option value="UNREVIEWED" {% if current == 'UNREVIEWED' %}selected{% endif %}>Unreviewed</option>
-                                    <option value="SEVERE" {% if current == 'SEVERE' %}selected{% endif %}>Severely poor</option>
-                                    <option value="POOR" {% if current == 'POOR' %}selected{% endif %}>Poor</option>
-                                    <option value="AVERAGE" {% if current == 'AVERAGE' %}selected{% endif %}>Average / improvable</option>
-                                    <option value="GOOD" {% if current == 'GOOD' %}selected{% endif %}>Good</option>
-                                </select>
-                            </div>
-                            <div class="col-md-6">
-                                <input type="text"
-                                       class="form-control form-control-sm"
-                                       name="audit_notes"
-                                       value="{{ l.audit_notes or '' }}"
-                                       maxlength="500"
-                                       placeholder="e.g. slow mobile, weak CTA, outdated design">
-                            </div>
-                            <div class="col-md-2 d-grid">
-                                <button class="btn btn-outline-primary btn-sm" type="submit">
-                                    Save
-                                </button>
-                            </div>
-                            {% if l.audited_at %}
-                            <div class="col-12">
-                                <small class="text-muted">Reviewed {{ l.audited_at[:16] }}</small>
-                            </div>
-                            {% endif %}
-                        </form>
-                    </td>
-                </tr>
-                {% else %}
-                <tr>
-                    <td colspan="5" class="text-center text-muted py-4">
-                        No qualifying website prospects found in this search.
-                    </td>
-                </tr>
-                {% endfor %}
-                </tbody>
-            </table>
-        </div>
-    </div>
-</div>
+    <input type="search" class="control filter-input" placeholder="Filter businesses…" aria-label="Filter visible businesses" data-active-pool-filter>
+  </div>
+  <div id="no-website" class="section-anchor" role="tabpanel" aria-labelledby="tab-no-website" data-tab-panel="no-website">
+    <div class="toolbar" style="border-bottom:0"><span class="small muted">Businesses without a listed website. Review contact information before reaching out.</span></div>
+    <div class="table-wrap"><table class="data-table" id="no-website-table">
+      <thead><tr><th>Business</th><th><button type="button" class="sort-btn" data-sort-table="no-website-table" data-sort-col="1" data-sort-type="number" aria-pressed="false">Rating ↕</button></th><th><button type="button" class="sort-btn" data-sort-table="no-website-table" data-sort-col="2" data-sort-type="number" aria-pressed="false">Reviews ↕</button></th><th>Contact</th><th>Location</th><th>Action</th></tr></thead>
+      <tbody>{% for l in no_website_leads %}
+      <tr>
+        <td><div class="business-name">{{ l.business_name }}</div><div class="business-sub">{{ l.business_status or 'Local business' }}</div></td>
+        <td class="rating" data-sort-value="{{ l.rating or 0 }}"><i class="fa-solid fa-star" aria-hidden="true"></i> {{ '%.1f'|format(l.rating) if l.rating is not none else '—' }}</td>
+        <td class="mono" data-sort-value="{{ l.review_count or 0 }}">{{ l.review_count or 0 }}</td>
+        <td>{{ l.phone_number or '—' }}</td>
+        <td><span class="business-sub">{{ l.address or '—' }}</span></td>
+        <td>{% if l.google_maps_url and (l.google_maps_url.startswith('https://') or l.google_maps_url.startswith('http://')) %}<a class="text-link" href="{{ l.google_maps_url }}" target="_blank" rel="noopener noreferrer">Maps ↗</a>{% else %}—{% endif %}</td>
+      </tr>
+      {% else %}
+      <tr class="static-empty"><td colspan="6"><div class="empty-state"><i class="fa-solid fa-globe" aria-hidden="true"></i><h3>No businesses in this pool</h3><p>This search has not saved any qualifying no-website prospects.</p></div></td></tr>
+      {% endfor %}</tbody>
+    </table></div><div class="no-rows" data-no-rows-for="no-website-table" hidden>Nothing matches your filter.</div>
+  </div>
+  <div id="audit-queue" class="section-anchor" role="tabpanel" aria-labelledby="tab-audit-queue" data-tab-panel="audit-queue" hidden>
+    <div class="toolbar" style="border-bottom:0"><span class="small muted">Open the live site, assess it manually, then record a condition and notes. No automated scores are generated.</span><span class="pill pill-amber">Manual review</span></div>
+    <div class="table-wrap"><table class="data-table" id="audit-queue-table">
+      <thead><tr><th>Business</th><th>Google rating</th><th>Reviews</th><th>Existing website</th><th>Assessment</th><th>Review</th></tr></thead>
+      <tbody>{% for l in website_leads %}
+      <tr class="audit-row" data-audit-lead="{{ l.id }}">
+        <td><div class="business-name">{{ l.business_name }}</div><div class="business-sub">{{ l.phone_number or l.address or '' }}</div></td>
+        <td class="rating" data-sort-value="{{ l.rating or 0 }}"><i class="fa-solid fa-star" aria-hidden="true"></i> {{ '%.1f'|format(l.rating) if l.rating is not none else '—' }}</td>
+        <td class="mono">{{ l.review_count or 0 }}</td>
+        <td>{% if l.website_url and (l.website_url.startswith('https://') or l.website_url.startswith('http://')) %}<a class="text-link" href="{{ l.website_url }}" target="_blank" rel="noopener noreferrer">Open site ↗</a>{% else %}<span class="subtle">Not available</span>{% endif %}{% if l.google_maps_url and (l.google_maps_url.startswith('https://') or l.google_maps_url.startswith('http://')) %}<div style="margin-top:5px"><a class="small muted" href="{{ l.google_maps_url }}" target="_blank" rel="noopener noreferrer">View Maps ↗</a></div>{% endif %}</td>
+        <td>{% set condition = l.website_condition or 'UNREVIEWED' %}
+          <span class="pill {% if condition == 'SEVERE' %}pill-red{% elif condition in ['POOR', 'AVERAGE'] %}pill-amber{% elif condition == 'GOOD' %}pill-mint{% else %}pill-muted{% endif %}">{{ {'UNREVIEWED':'Unreviewed','SEVERE':'Severely poor','POOR':'Poor','AVERAGE':'Average / improvable','GOOD':'Good'}.get(condition,'Unreviewed') }}</span>
+          {% if l.audited_at %}<div class="business-sub">Reviewed {{ l.audited_at[:16] }}</div>{% endif %}
+        </td>
+        <td><details class="audit-disclosure">
+          <summary aria-label="Edit manual website audit for {{ l.business_name }}">Evaluate <i class="fa-solid fa-chevron-down" style="margin-left:5px" aria-hidden="true"></i></summary>
+          <form class="audit-form" method="post" action="{{ url_for('results.update_audit', lead_id=l.id) }}">
+            <label for="condition-{{ l.id }}">Website condition</label>
+            <select class="control" id="condition-{{ l.id }}" name="website_condition">
+              <option value="UNREVIEWED" {% if condition == 'UNREVIEWED' %}selected{% endif %}>Unreviewed</option>
+              <option value="SEVERE" {% if condition == 'SEVERE' %}selected{% endif %}>Severely poor</option>
+              <option value="POOR" {% if condition == 'POOR' %}selected{% endif %}>Poor</option>
+              <option value="AVERAGE" {% if condition == 'AVERAGE' %}selected{% endif %}>Average / improvable</option>
+              <option value="GOOD" {% if condition == 'GOOD' %}selected{% endif %}>Good</option>
+            </select>
+            <label for="notes-{{ l.id }}">Audit observations</label>
+            <textarea class="control" id="notes-{{ l.id }}" name="audit_notes" maxlength="500" placeholder="e.g. weak mobile layout, unclear call to action">{{ l.audit_notes or '' }}</textarea>
+            <button class="btn btn-primary btn-small" type="submit"><i class="fa-solid fa-check" aria-hidden="true"></i> Save evaluation</button>
+            <p>Saved to LNVE's existing SQLite audit record.</p>
+          </form>
+        </details></td>
+      </tr>{% else %}
+      <tr class="static-empty"><td colspan="6"><div class="empty-state"><i class="fa-solid fa-clipboard-check" aria-hidden="true"></i><h3>Nothing to audit here</h3><p>Sites found during this search will appear here for manual review.</p></div></td></tr>
+      {% endfor %}</tbody>
+    </table></div><div class="no-rows" data-no-rows-for="audit-queue-table" hidden>Nothing matches your filter.</div>
+  </div>
+  <div class="count-footnote">Only actual qualifying search results are displayed. Website condition labels represent your manual assessment, not automated diagnostics.</div>
+</section>
 {% endblock %}
