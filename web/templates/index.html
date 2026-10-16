@@ -1,113 +1,92 @@
 {% extends "base.html" %}
-{% block title %}Search{% endblock %}
-
+{% block title %}Discover{% endblock %}
+{% block breadcrumb %}Discover{% endblock %}
 {% block content %}
-<h1 class="mb-4"><i class="fas fa-search me-2 text-primary"></i>Find Prospects</h1>
-
-<div class="row g-4">
-    <div class="col-lg-7">
-        <div class="card">
-            <div class="card-header py-3">
-                <i class="fas fa-filter me-2"></i>Search Parameters
-            </div>
-            <div class="card-body">
-                <form method="POST" action="{{ url_for('search.start_search') }}">
-                    <div class="mb-3">
-                        <label class="form-label fw-semibold">Business Type</label>
-                        <select class="form-select" name="search_type">
-                            <option value="">Select a high-ticket niche…</option>
-                            {% for value, label in search_types %}
-                            <option value="{{ value }}">{{ label }}</option>
-                            {% endfor %}
-                        </select>
-                        <div class="form-text">Or enter any business keyword below.</div>
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="form-label fw-semibold">
-                            Custom Keyword <span class="text-muted">(overrides dropdown)</span>
-                        </label>
-                        <input type="text" class="form-control" name="custom_type"
-                               placeholder="e.g. basement renovation contractor">
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="form-label fw-semibold">Location</label>
-                        <input type="text" class="form-control" name="location_name"
-                               value="Mississauga, ON" required
-                               placeholder="City name, address, or lat,lng">
-                    </div>
-
-                    <div class="row g-3">
-                        <div class="col-md-4">
-                            <label class="form-label fw-semibold">Radius (km)</label>
-                            <input type="number" class="form-control" name="radius"
-                                   value="25" min="1" max="50" step="1" required>
-                        </div>
-
-                        <div class="col-md-4">
-                            <label class="form-label fw-semibold">Minimum Rating</label>
-                            <input type="number" class="form-control" name="min_rating"
-                                   value="4.5" min="0" max="5" step="0.1" required>
-                        </div>
-
-                        <div class="col-md-4">
-                            <label class="form-label fw-semibold">Minimum Reviews</label>
-                            <input type="number" class="form-control" name="min_reviews"
-                                   value="30" min="0" step="1" required>
-                        </div>
-                    </div>
-
-                    <div class="alert alert-light border small mt-4">
-                        <i class="fab fa-google me-1"></i>
-                        Google Places will keep qualifying businesses whether they
-                        have a website or not. Website prospects will be split into
-                        the audit queue in Phase 3.
-                    </div>
-
-                    <button type="submit" class="btn btn-primary btn-lg w-100">
-                        <i class="fas fa-play me-2"></i>Find Prospects
-                    </button>
-                </form>
-            </div>
-        </div>
+<section class="hero" aria-labelledby="discover-title" data-reveal>
+  <div class="hero-art" aria-hidden="true"><span class="hero-pin"></span><span class="hero-point hero-point-a"></span><span class="hero-point hero-point-b"></span><span class="hero-point hero-point-c"></span></div>
+  <div class="page-eyebrow">01 / Market discovery</div>
+  <h1 id="discover-title">Find the businesses.<br><em>See the opportunity.</em></h1>
+  <p>Discover established local businesses, separate website opportunities, and build a more focused outreach list.</p>
+  <div class="hero-meta"><span><i class="fa-solid fa-location-dot" aria-hidden="true"></i> Location-driven search</span><span><i class="fa-solid fa-shield-halved" aria-hidden="true"></i> Real Places data</span></div>
+</section>
+<div class="section-heading" data-reveal>
+  <div><div class="section-label">Search workspace</div><h2 style="margin-top:7px">Build your next prospect list</h2></div>
+  <a href="{{ url_for('results.results') }}" class="text-link">View saved prospects <i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i></a>
+</div>
+<div class="discover-grid">
+  <section class="panel panel-pad" aria-labelledby="search-parameters" data-reveal>
+    <div class="section-heading" style="margin-bottom:24px">
+      <h2 id="search-parameters"><i class="fa-solid fa-sliders" style="color:var(--mint);margin-right:9px" aria-hidden="true"></i> Search parameters</h2>
+      <span class="pill pill-mint">Google Places</span>
     </div>
-
-    <div class="col-lg-5">
-        <div class="row g-3">
-            <div class="col-12">
-                <div class="stat-card stat-blue">
-                    <i class="fas fa-star fa-2x mb-2 opacity-75"></i>
-                    <h6>Quality First</h6>
-                    <p class="mb-0 small opacity-75">
-                        Filter for businesses with strong ratings and enough reviews
-                        to show an established reputation.
-                    </p>
-                </div>
-            </div>
-
-            <div class="col-12">
-                <div class="stat-card stat-green">
-                    <i class="fas fa-globe fa-2x mb-2 opacity-75"></i>
-                    <h6>Both Prospect Types</h6>
-                    <p class="mb-0 small opacity-75">
-                        Keep no-site prospects and businesses with websites that may
-                        be candidates for a rebuild.
-                    </p>
-                </div>
-            </div>
-
-            <div class="col-12">
-                <div class="stat-card stat-purple">
-                    <i class="fas fa-map-marker-alt fa-2x mb-2 opacity-75"></i>
-                    <h6>Local Radius Check</h6>
-                    <p class="mb-0 small opacity-75">
-                        Results are checked against your chosen search radius before
-                        they are stored.
-                    </p>
-                </div>
-            </div>
+    <form method="post" action="{{ url_for('search.start_search') }}" id="prospect-search-form">
+      <div class="field-grid">
+        <div class="field">
+          <label for="search-type">Business niche</label>
+          <select class="control" id="search-type" name="search_type">
+            <option value="">Select a service category</option>
+            {% for value, label in search_types %}
+            <option value="{{ value }}">{{ label }}</option>
+            {% endfor %}
+          </select>
         </div>
+        <div class="field">
+          <label for="custom-type">Custom keyword <span class="field-note">· overrides niche</span></label>
+          <input class="control" type="text" id="custom-type" name="custom_type" placeholder="e.g. kitchen renovation contractor" autocomplete="off" maxlength="120">
+        </div>
+        <div class="field field-full">
+          <label for="location-name">Target location</label>
+          <input class="control" id="location-name" type="text" name="location_name" value="Mississauga, ON" placeholder="City, address, or latitude,longitude" required autocomplete="address-level2">
+          <div class="field-note" style="margin-top:7px">Businesses outside your selected radius are excluded by the existing search logic.</div>
+        </div>
+      </div>
+      <div class="form-divider"></div>
+      <div class="field-grid">
+        <div class="field" data-range-pair>
+          <label for="radius-number">Search radius <span class="field-note">· 1–50 km</span></label>
+          <div class="range-wrap">
+            <input type="range" min="1" max="50" step="1" value="25" aria-label="Search radius slider" data-range-control>
+            <input class="control range-value" id="radius-number" type="number" name="radius" value="25" min="1" max="50" step="1" required data-range-number>
+          </div>
+        </div>
+        <div class="field" data-range-pair>
+          <label for="rating-number">Minimum Google rating <span class="field-note">· 0–5</span></label>
+          <div class="range-wrap">
+            <input type="range" min="0" max="5" step=".1" value="4.5" aria-label="Minimum rating slider" data-range-control>
+            <input class="control range-value" id="rating-number" type="number" name="min_rating" value="4.5" min="0" max="5" step=".1" required data-range-number>
+          </div>
+        </div>
+        <div class="field field-full">
+          <label for="min-reviews">Minimum review count</label>
+          <input class="control" style="max-width:200px" id="min-reviews" name="min_reviews" type="number" value="30" min="0" step="1" required>
+          <div class="field-note" style="margin-top:7px">A review threshold helps prioritize businesses with an established presence. It does not measure purchase intent.</div>
+        </div>
+      </div>
+      <div class="form-footer">
+        <span class="helper-inline"><i class="fa-solid fa-circle-info" aria-hidden="true"></i> A search makes a paid Google Places request.</span>
+        <button class="btn btn-primary" id="start-search" type="submit"><i class="fa-solid fa-arrow-right" aria-hidden="true"></i> Start discovery</button>
+      </div>
+    </form>
+  </section>
+  <aside class="insight-stack" aria-label="How LNVE works" data-reveal>
+    <div class="panel insight-card">
+      <div class="insight-icon"><i class="fa-solid fa-crosshairs" aria-hidden="true"></i></div>
+      <div class="section-label">01 / Discover</div>
+      <h3 style="margin-top:7px">Search with intent</h3>
+      <p>Choose your market, location, rating and review thresholds. Keep the prospect list focused.</p>
     </div>
+    <div class="panel insight-card">
+      <div class="insight-icon insight-icon-amber"><i class="fa-solid fa-code-branch" aria-hidden="true"></i></div>
+      <div class="section-label">02 / Segment</div>
+      <h3 style="margin-top:7px">Two opportunity pools</h3>
+      <p>Separate businesses without websites from businesses whose existing sites merit manual review.</p>
+    </div>
+    <div class="panel insight-card">
+      <div class="insight-icon"><i class="fa-solid fa-clipboard-check" aria-hidden="true"></i></div>
+      <div class="section-label">03 / Evaluate</div>
+      <h3 style="margin-top:7px">Human judgment, first</h3>
+      <p>Inspect websites, record your observations, and export the prospects you want to contact.</p>
+    </div>
+  </aside>
 </div>
 {% endblock %}
