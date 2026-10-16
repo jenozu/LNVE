@@ -66,7 +66,7 @@ def seed_demo(repo: Repository) -> None:
             overall_status="completed",
         )
         for bidx, (name, has_website, rating, reviews) in enumerate(businesses):
-            lead_id = repo.insert_lead(
+            repo.insert_lead(
                 search_id=search_id,
                 place_id=f"lnve-demo-{sidx}-{bidx}",
                 business_name=name,
@@ -78,13 +78,13 @@ def seed_demo(repo: Repository) -> None:
                 google_maps_url="",
                 business_status="OPERATIONAL",
             )
-            if has_website:
-                condition = condition_cycle[audit_index % len(condition_cycle)]
-                audit_index += 1
-                if condition != "UNREVIEWED":
-                    repo.update_website_audit(
-                        lead_id=lead_id,
-                        website_condition=condition,
-                        audit_notes="Fictional sample assessment for exploring the LNVE interface.",
-                    )
+        for lead in repo.get_leads_for_search_by_pool(search_id, True):
+            condition = condition_cycle[audit_index % len(condition_cycle)]
+            audit_index += 1
+            if condition != "UNREVIEWED":
+                repo.update_website_audit(
+                    lead_id=lead["id"],
+                    website_condition=condition,
+                    audit_notes="Fictional sample assessment for exploring the LNVE interface.",
+                )
         repo.recompute_overall_status(search_id)
