@@ -34,7 +34,7 @@
     <input type="search" class="control filter-input" placeholder="Filter businesses…" aria-label="Filter visible businesses" data-active-pool-filter>
   </div>
   <div id="no-website" class="section-anchor" role="tabpanel" aria-labelledby="tab-no-website" data-tab-panel="no-website">
-    <div class="toolbar" style="border-bottom:0"><span class="small muted">Businesses without a listed website. Review contact information before reaching out.</span></div>
+    <div class="toolbar" style="border-bottom:0"><span class="small muted">No Website — Immediate Outreach. Review contact information before reaching out.</span></div>
     <div class="table-wrap"><table class="data-table" id="no-website-table">
       <thead><tr><th>Business</th><th><button type="button" class="sort-btn" data-sort-table="no-website-table" data-sort-col="1" data-sort-type="number" aria-pressed="false">Rating ↕</button></th><th><button type="button" class="sort-btn" data-sort-table="no-website-table" data-sort-col="2" data-sort-type="number" aria-pressed="false">Reviews ↕</button></th><th>Contact</th><th>Location</th><th>Action</th></tr></thead>
       <tbody>{% for l in no_website_leads %}
@@ -52,7 +52,7 @@
     </table></div><div class="no-rows" data-no-rows-for="no-website-table" hidden>Nothing matches your filter.</div>
   </div>
   <div id="audit-queue" class="section-anchor" role="tabpanel" aria-labelledby="tab-audit-queue" data-tab-panel="audit-queue" hidden>
-    <div class="toolbar" style="border-bottom:0"><span class="small muted">Open the live site, assess it manually, then record a condition and notes. No automated scores are generated.</span><span class="pill pill-amber">Manual review</span></div>
+    <div class="toolbar" style="border-bottom:0"><span class="small muted">Website Audit Queue — Manual Audit. Open the site and record your assessment; no automated scores are generated.</span><span class="pill pill-amber">Manual review</span></div>
     <div class="table-wrap"><table class="data-table" id="audit-queue-table">
       <thead><tr><th>Business</th><th>Google rating</th><th>Reviews</th><th>Existing website</th><th>Assessment</th><th>Review</th></tr></thead>
       <tbody>{% for l in website_leads %}
