@@ -98,6 +98,8 @@ def run() -> None:
                     if name == "search-detail":
                         page.get_by_role("tab", name="Website audit queue").click()
                         page.locator(".audit-disclosure summary").first.click()
+                    page.evaluate("document.documentElement.style.scrollBehavior = 'auto'; window.scrollTo(0, 0)")
+                    page.wait_for_timeout(100)
                     width_ok = page.evaluate("document.documentElement.scrollWidth <= window.innerWidth + 1")
                     assert width_ok, f"Unwanted page-level horizontal overflow: {label}/{name}"
                     page.screenshot(path=str(output / (label + "-" + name + ".png")), full_page=True, animations="disabled")
