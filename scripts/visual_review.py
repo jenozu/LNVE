@@ -5,6 +5,7 @@ Run inside CI with Playwright Chromium. Never reads production data, env, or API
 from __future__ import annotations
 
 import os
+import sys
 import tempfile
 import threading
 from pathlib import Path
@@ -14,6 +15,8 @@ os.environ["DATABASE_PATH"] = str(Path(fixture_dir.name) / "visual.db")
 os.environ["GOOGLE_MAPS_KEY"] = "synthetic-browser-fixture"
 os.environ["SECRET_KEY"] = "visual-review-only"
 os.environ["FLASK_DEBUG"] = "0"
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from playwright.sync_api import sync_playwright
 from werkzeug.serving import make_server
