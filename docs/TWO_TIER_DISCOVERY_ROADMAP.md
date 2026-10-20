@@ -161,7 +161,7 @@ Mark phases COMPLETE only when all constituent tasks and the phase's exit gate p
 - [ ] **T8.1 — Run Python unit/integration suite.** Keep `tests/test_phase3.py`, `tests/test_phase4.py`, `tests/test_redesign.py` passing; add isolated Tier 1, worker, DB migration, matching and enrichment contract tests.
 - [ ] **T8.2 — Run no-network CI.** Fake Geoapify/GMS responses; no Google Cloud API usage, third-party scraping or secrets required in GitHub Actions.
 - [ ] **T8.3 — Browser smoke test.** Check desktop/tablet/mobile, filters, three website states, empty results, error paths, audit preservation and export contents.
-- [ ] **T8.4 — Deploy **only** to isolated staging** with a distinct VPS directory, virtualenv, SQLite database, worker/service, credentials and hostname; do not touch the live app, live database, existing `systemd` unit, Nginx routes or production domain.
+- [ ] **T8.4 — Deploy only to isolated staging.** with a distinct VPS directory, virtualenv, SQLite database, worker/service, credentials and hostname; do not touch the live app, live database, existing `systemd` unit, Nginx routes or production domain.
 - [ ] **T8.5 — Execute a small permitted live Geoapify pilot.** Review real business records for relevance, duplicate rate, website status quality, missing-field coverage and API credits used. If T5 approved, selectively test authorized Tier 2 on a small manual sample.
 - [ ] **T8.6 — Record explicit go/no-go review.** Confirm licensing, costs, privacy, security, backups, operator manual, rollback and reproducibility before any production cutover; never deploy solely because CI is green.
 
