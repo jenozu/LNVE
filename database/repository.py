@@ -217,6 +217,23 @@ class Repository:
             ).fetchone()
             return dict(row) if row else None
 
+    def get_prospect_summary(self) -> Dict:
+        """Exact totals for the active prospect pools and manual audit progress."""
+        with _connect(self.db_path) as conn:
+            row = conn.execute(
+                """
+                SELECT
+                    COUNT(*) AS total,
+                    SUM(CASE WHEN website_status = 'No Website Found' THEN 1 ELSE 0 END) AS no_website,
+                    SUM(CASE WHEN website_status = 'Has Website' THEN 1 ELSE 0 END) AS website_audit,
+                    SUM(CASE WHEN website_status = 'Has Website'
+                             AND website_condition IN ('SEVERE', 'POOR', 'AVERAGE', 'GOOD')
+                             THEN 1 ELSE 0 END) AS reviewed
+                FROM leads
+                """
+            ).fetchone()
+            return {key: int(row[key] or 0) for key in row.keys()}
+
     def list_searches(self, limit: int = 100) -> List[Dict]:
         with _connect(self.db_path) as conn:
             rows = conn.execute(

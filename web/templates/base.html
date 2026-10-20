@@ -1,107 +1,80 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}LNVE{% endblock %} — Lead Finder</title>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <style>
-        :root {
-            --sidebar-bg: linear-gradient(160deg, #1e3a5f 0%, #2d6a9f 100%);
-            --accent: #2d6a9f;
-        }
-        body { background: #f0f4f8; min-height: 100vh; }
-        .sidebar {
-            min-height: 100vh;
-            background: var(--sidebar-bg);
-            color: #fff;
-            width: 220px;
-            position: fixed;
-            top: 0;
-            left: 0;
-            bottom: 0;
-            padding: 1.5rem 1rem;
-            z-index: 100;
-        }
-        .sidebar .brand { font-size: 1.1rem; font-weight: 700; margin-bottom: 2rem; }
-        .sidebar .nav-link {
-            color: rgba(255,255,255,.75);
-            border-radius: 8px;
-            padding: .5rem .75rem;
-            margin: 2px 0;
-            transition: all .2s;
-        }
-        .sidebar .nav-link:hover,
-        .sidebar .nav-link.active {
-            background: rgba(255,255,255,.18);
-            color: #fff;
-            transform: translateX(4px);
-        }
-        .sidebar .nav-link i { width: 20px; }
-        .main { margin-left: 220px; padding: 2rem; }
-        .card {
-            border: none;
-            border-radius: 12px;
-            box-shadow: 0 2px 12px rgba(0,0,0,.08);
-        }
-        .card-header {
-            background: none;
-            border-bottom: 1px solid rgba(0,0,0,.08);
-            font-weight: 600;
-        }
-        .status-running { background:#fff3cd; color:#664d03; }
-        .status-completed { background:#d1e7dd; color:#0a3622; }
-        .status-failed { background:#f8d7da; color:#58151c; }
-        .status-pending { background:#cfe2ff; color:#084298; }
-        .status-cancelled,
-        .status-skipped { background:#e2e3e5; color:#41464b; }
-        .status-badge {
-            font-size:.78rem;
-            padding:3px 10px;
-            border-radius:20px;
-            font-weight:600;
-        }
-        @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.6} }
-        .status-running { animation: pulse 2s infinite; }
-        .stat-card { border-radius: 12px; color:#fff; padding: 1.25rem; }
-        .stat-blue { background: linear-gradient(135deg,#1e3a5f,#2d6a9f); }
-        .stat-green { background: linear-gradient(135deg,#1d7a4a,#28a862); }
-        .stat-purple { background: linear-gradient(135deg,#4a1d7a,#7b28c8); }
-    </style>
-    {% block extra_head %}{% endblock %}
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#090e11">
+  <meta name="description" content="LNVE — local prospect discovery and website opportunity intelligence.">
+  <title>{% block title %}Workspace{% endblock %} · LNVE</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="{{ url_for('static', filename='lnve.css') }}">
+  {% block extra_head %}{% endblock %}
+  <noscript><style>[data-tab-panel][hidden] { display:block !important; } [data-tab] { display:none !important; }</style></noscript>
 </head>
 <body>
-<div class="sidebar">
-    <div class="brand">
-        <i class="fas fa-search-dollar me-2"></i>LNVE
-    </div>
-    <nav class="nav flex-column">
-        <a class="nav-link {% if request.endpoint == 'search.index' %}active{% endif %}"
-           href="{{ url_for('search.index') }}">
-            <i class="fas fa-search me-2"></i>Search
-        </a>
-        <a class="nav-link {% if request.endpoint == 'results.results' %}active{% endif %}"
-           href="{{ url_for('results.results') }}">
-            <i class="fas fa-list me-2"></i>Results
-        </a>
+<a class="skip-link" href="#main-content">Skip to main content</a>
+<div class="app-shell">
+  <button type="button" class="mobile-backdrop" data-close-nav aria-label="Close navigation"></button>
+  <aside class="sidebar" id="primary-navigation" aria-label="Primary navigation">
+    <a href="{{ url_for('search.index') }}" class="brand-row" aria-label="LNVE home">
+      <span class="brand-mark" aria-hidden="true"><span>◈</span></span>
+      <span><span class="brand-name">LNVE</span><span class="brand-tag">Prospect intelligence</span></span>
+    </a>
+    <p class="nav-kicker">Workspace</p>
+    <nav class="nav-group" aria-label="Workspace">
+      <a class="nav-link {% if request.endpoint == 'search.index' %}active{% endif %}" href="{{ url_for('search.index') }}" {% if request.endpoint == 'search.index' %}aria-current="page"{% endif %}><i class="fa-solid fa-compass" aria-hidden="true"></i> Discover</a>
+      <a class="nav-link {% if request.endpoint in ('results.results','results.search_detail') %}active{% endif %}" href="{{ url_for('results.results') }}" {% if request.endpoint in ('results.results','results.search_detail') %}aria-current="page"{% endif %}><i class="fa-solid fa-layer-group" aria-hidden="true"></i> Prospects</a>
     </nav>
+    <p class="nav-kicker">Collections</p>
+    <nav class="nav-group" aria-label="Collections">
+      <a class="nav-link" href="{{ url_for('results.results') }}#no-website"><i class="fa-solid fa-globe" aria-hidden="true"></i> No website</a>
+      <a class="nav-link" href="{{ url_for('results.results') }}#audit-queue"><i class="fa-solid fa-wand-magic-sparkles" aria-hidden="true"></i> Website audit queue</a>
+      <a class="nav-link" href="{{ url_for('results.results') }}#recent-searches"><i class="fa-solid fa-clock-rotate-left" aria-hidden="true"></i> Recent searches</a>
+    </nav>
+    <p class="nav-kicker">Data</p>
+    <nav class="nav-group" aria-label="Data">
+      <a class="nav-link" href="{{ url_for('results.results') }}#export-actions"><i class="fa-solid fa-arrow-up-from-bracket" aria-hidden="true"></i> Export prospects</a>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="online-marker">Private prospect workspace</div>
+      <p class="sidebar-note">Google Places discovery · Manual website review<br>Finding an opportunity is not a signal of buying intent.</p>
+    </div>
+  </aside>
+  <div class="workspace">
+    <header class="topbar">
+      <div style="display:flex;align-items:center;gap:13px;min-width:0">
+        <button type="button" class="mobile-toggle" data-open-nav aria-controls="primary-navigation" aria-expanded="false" aria-label="Open navigation"><i class="fa-solid fa-bars"></i></button>
+        <div class="breadcrumb"><span>LNVE</span><span class="slash">/</span><strong>{% block breadcrumb %}Workspace{% endblock %}</strong></div>
+      </div>
+      <div class="top-actions">
+        <span class="top-date">Local market research</span>
+        <a href="{{ url_for('search.index') }}" class="top-cta"><i class="fa-solid fa-plus" aria-hidden="true"></i> New search</a>
+      </div>
+    </header>
+    <main id="main-content" class="content">
+      {% if config.get('LNVE_DEMO_MODE') %}
+      <div class="flash flash-warning" role="note" style="margin-bottom:22px">
+        <span><i class="fa-solid fa-flask" style="margin-right:8px;color:var(--amber)" aria-hidden="true"></i>
+        <strong>Interactive preview</strong> — fictional businesses only. Google searches are disabled, and demo edits may reset.</span>
+        <a href="{{ url_for('results.results') }}" class="text-link" style="white-space:nowrap">Explore prospects ↗</a>
+      </div>
+      {% endif %}
+      {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+      <div class="flash-stack" aria-live="polite">
+        {% for category, message in messages %}
+        <div class="flash flash-{{ category }}" role="status"><span>{{ message }}</span><button type="button" class="flash-close" data-dismiss-flash aria-label="Dismiss message">&times;</button></div>
+        {% endfor %}
+      </div>
+      {% endif %}
+      {% endwith %}
+      {% block content %}{% endblock %}
+    </main>
+  </div>
 </div>
-
-<div class="main">
-    {% with messages = get_flashed_messages(with_categories=true) %}
-      {% for cat, msg in messages %}
-        <div class="alert alert-{{ cat }} alert-dismissible fade show" role="alert">
-          {{ msg }}
-          <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-      {% endfor %}
-    {% endwith %}
-
-    {% block content %}{% endblock %}
-</div>
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+<script defer src="{{ url_for('static', filename='lnve.js') }}"></script>
 {% block extra_js %}{% endblock %}
 </body>
 </html>

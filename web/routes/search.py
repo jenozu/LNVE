@@ -6,6 +6,7 @@ Places API (New) prospect search.
 """
 
 import logging
+import os
 import re
 from threading import Thread
 
@@ -39,6 +40,9 @@ def index():
 
 @bp.route("/search", methods=["POST"])
 def start_search():
+    if os.getenv("LNVE_DEMO_MODE") == "1":
+        flash("Preview mode: discovery is disabled to avoid Google Places charges. Browse the fictional prospects under Prospects.", "warning")
+        return redirect(url_for("search.index"))
     custom = request.form.get("custom_type", "").strip()
     selected = request.form.get("search_type", "").strip()
     search_type = custom if custom else selected

@@ -1,5 +1,11 @@
 # LNVE — Lean Website Lead Finder
 
+## Current development roadmap — two-tier business discovery
+
+The planned replacement for Google Places uses **Geoapify** as the primary business discovery source and an **optional, permission-reviewed Google Maps Scraper (GMS)** as a secondary business-field and reputation-enrichment source.
+
+**[Open the two-tier integration task checklist](docs/TWO_TIER_DISCOVERY_ROADMAP.md)** — phased milestones T0–T8, checkboxes, acceptance criteria, implementation file map, source-use decisions and a progress log. **Start at T0.1.** The plan is not deployed; current `main` and production LNVE remain unchanged.
+
 LNVE is being refactored into a focused local-business prospecting tool.
 
 ## MVP goal

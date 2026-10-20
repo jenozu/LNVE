@@ -21,6 +21,7 @@ def results():
     return render_template(
         "results.html",
         searches=repo.list_searches(),
+        stats=repo.get_prospect_summary(),
         no_website_leads=repo.get_recent_leads_by_pool(False, 25),
         website_leads=repo.get_recent_leads_by_pool(True, 25),
     )

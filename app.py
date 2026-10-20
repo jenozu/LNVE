@@ -12,6 +12,7 @@ registered in the MVP. The pre-refactor application is preserved on the
 """
 
 import logging
+import os
 
 from flask import Flask
 
@@ -25,6 +26,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 app = Flask(__name__, template_folder="web/templates")
+app.config["LNVE_DEMO_MODE"] = os.getenv("LNVE_DEMO_MODE") == "1"
 app.secret_key = settings.SECRET_KEY
 
 from web.routes.search import bp as search_bp
@@ -37,7 +39,14 @@ app.register_blueprint(export_bp)
 
 with app.app_context():
     settings.validate()
-    Repository().init()
+    repository = Repository()
+    repository.init()
+    if app.config["LNVE_DEMO_MODE"]:
+        # Strictly disallow preview seeding outside an isolated temp database.
+        if not settings.DATABASE_PATH.startswith("/tmp/lnve-signal-preview"):
+            raise RuntimeError("Demo mode requires a dedicated /tmp/lnve-signal-preview database.")
+        from demo_seed import seed_demo
+        seed_demo(repository)
     logger.info("LNVE MVP started — http://127.0.0.1:5000")
 
 if __name__ == "__main__":

@@ -1,186 +1,116 @@
 {% extends "base.html" %}
-{% block title %}Results{% endblock %}
-
+{% block title %}Prospects{% endblock %}
+{% block breadcrumb %}Prospects{% endblock %}
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <div>
-        <h1 class="mb-1"><i class="fas fa-list me-2 text-primary"></i>Prospects</h1>
-        <p class="text-muted mb-0">Strong businesses split into immediate no-site leads and website audit candidates.</p>
+<div class="page-heading" data-reveal>
+  <div>
+    <div class="page-eyebrow">02 / Prospect intelligence</div>
+    <h1 class="page-title">Your opportunity pipeline.</h1>
+    <p class="page-intro" style="margin:0">Real businesses, organized into distinct research workflows. Every number below comes from saved LNVE records.</p>
+  </div>
+  <a class="btn btn-primary" href="{{ url_for('search.index') }}"><i class="fa-solid fa-plus" aria-hidden="true"></i> New discovery</a>
+</div>
+<section class="data-grid" aria-label="Prospect overview" data-reveal>
+  <div class="panel metric"><span class="metric-label">Saved prospects</span><span class="metric-value">{{ stats.total }}</span><span class="metric-footer">Across all searches</span></div>
+  <div class="panel metric"><span class="metric-label">No website</span><span class="metric-value">{{ stats.no_website }}</span><span class="metric-footer">Immediate website opportunities</span></div>
+  <div class="panel metric"><span class="metric-label">Website audit queue</span><span class="metric-value">{{ stats.website_audit }}</span><span class="metric-footer">Sites available for review</span></div>
+  <div class="panel metric"><span class="metric-label">Audits completed</span><span class="metric-value">{{ stats.reviewed }}</span><span class="metric-footer">Manually evaluated sites</span></div>
+</section>
+<section class="visual-section" aria-label="Prospect breakdown" data-reveal>
+  <div class="panel panel-pad">
+    <div class="section-heading"><h2>Opportunity distribution</h2><span class="section-label">All saved leads</span></div>
+    {% if stats.no_website + stats.website_audit > 0 %}
+    <div class="distribution" role="img" aria-label="{{ stats.no_website }} prospects without websites and {{ stats.website_audit }} websites to audit">
+      <div class="bar-no" style="flex:{{ stats.no_website }}"></div>
+      <div class="bar-audit" style="flex:{{ stats.website_audit }}"></div>
     </div>
+    <div class="legend-row"><span><i class="legend-dot" aria-hidden="true"></i>No website <strong style="color:var(--ink)">{{ stats.no_website }}</strong></span><span><i class="legend-dot legend-dot-amber" aria-hidden="true"></i>Audit queue <strong style="color:var(--ink)">{{ stats.website_audit }}</strong></span></div>
+    {% else %}
+    <div class="empty-chart">Start a discovery search to see the composition of your prospect list.</div>
+    {% endif %}
+  </div>
+  <div class="panel panel-pad">
+    <div class="section-heading"><h2>Website review progress</h2><span class="section-label">Manual audits</span></div>
+    {% set progress = (stats.reviewed * 100 / stats.website_audit)|round|int if stats.website_audit else 0 %}
+    <div class="progress-layout">
+      <div class="ring" style="--progress:{{ progress }}%" role="img" aria-label="{{ progress }} percent reviewed"><strong>{{ progress }}%</strong></div>
+      <div><div class="business-name">{{ stats.reviewed }} of {{ stats.website_audit }} reviewed</div><p>{% if stats.website_audit %}{{ stats.website_audit - stats.reviewed }} sites are awaiting a manual website evaluation.{% else %}Your audit progress will appear when website prospects are saved.{% endif %}</p></div>
+    </div>
+  </div>
+</section>
+<section class="panel slim-panel section-anchor" id="recent-searches" aria-labelledby="recent-searches-title" data-reveal>
+  <div class="panel-head"><div><div class="section-label" style="margin-bottom:6px">Search history</div><h2 id="recent-searches-title">Recent searches</h2></div><span class="pill">{{ searches|length }} shown</span></div>
+  <div class="toolbar"><label class="small muted" for="search-history-filter">Filter your saved searches</label><input class="control filter-input" id="search-history-filter" placeholder="Business type or location…" data-table-filter="search-history-table" type="search"></div>
+  <div class="table-wrap"><table class="data-table" id="search-history-table">
+    <thead><tr><th>Research query</th><th>Radius</th><th>Quality filter</th><th>Status</th><th>Prospects</th><th>Started</th><th>Action</th></tr></thead>
+    <tbody>
+      {% for s in searches %}
+      <tr data-search-id="{{ s.id }}" data-search-status="{{ s.status }}">
+        <td><div class="business-name">{{ s.search_type }}</div><div class="business-sub">{{ s.location_name }}</div></td>
+        <td class="mono">{{ s.radius_km }} km</td>
+        <td class="mono">{{ '%.1f'|format(s.min_rating or 0) }}+ ★ <span class="subtle">/</span> {{ s.min_reviews or 0 }}+ reviews</td>
+        <td><span class="pill status-{{ s.status }}" data-search-status-label>{{ s.status|capitalize }}</span></td>
+        <td><strong class="mono" data-search-count>{{ s.total_leads }}</strong></td>
+        <td class="subtle">{{ (s.created_at or '')[:16] }}</td>
+        <td><div class="table-actions"><a href="{{ url_for('results.search_detail', search_id=s.id) }}">Open <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a>{% if s.status == 'running' %}<form action="{{ url_for('search.cancel_search', search_id=s.id) }}" method="post"><button class="btn btn-small btn-danger" type="submit">Stop</button></form>{% endif %}</div></td>
+      </tr>
+      {% else %}
+      <tr class="static-empty"><td colspan="7"><div class="empty-state"><i class="fa-solid fa-compass" aria-hidden="true"></i><h3>No searches yet</h3><p>Start with a city and business niche to create your first prospect list.</p><a class="text-link" href="{{ url_for('search.index') }}">Discover businesses →</a></div></td></tr>
+      {% endfor %}
+    </tbody>
+  </table></div>
+  <div class="no-rows" data-no-rows-for="search-history-table" hidden>No searches match your filter.</div>
+  <div class="count-footnote">Showing up to 100 most recent searches. Running searches update their status automatically.</div>
+</section>
+<section class="panel section-anchor" id="prospect-collections" data-reveal>
+  <div class="panel-head" id="export-actions">
+    <div><div class="section-label" style="margin-bottom:6px">Prospect collections</div><h2>Browse and export</h2><span class="subtle small">No Website · Website Audit Queue</span></div>
     <div class="btn-group">
-        <a href="{{ url_for('export.export_csv', pool='all') }}" class="btn btn-outline-success">
-            <i class="fas fa-download me-1"></i>Export All
-        </a>
-        <a href="{{ url_for('export.export_csv', pool='no_website') }}" class="btn btn-outline-success">
-            No Website
-        </a>
-        <a href="{{ url_for('export.export_csv', pool='website_audit') }}" class="btn btn-outline-success">
-            Audit Queue
-        </a>
+      <a class="btn btn-small btn-quiet" href="{{ url_for('export.export_csv', pool='all') }}"><i class="fa-solid fa-download" aria-hidden="true"></i> All CSV</a>
+      <a class="btn btn-small btn-quiet" href="{{ url_for('export.export_csv', pool='no_website') }}">No website CSV</a>
+      <a class="btn btn-small btn-quiet" href="{{ url_for('export.export_csv', pool='website_audit') }}">Audit CSV</a>
     </div>
-</div>
-
-<div class="card mb-4">
-    <div class="card-header py-3">
-        <i class="fas fa-history me-2"></i>Recent Searches
+  </div>
+  <div class="toolbar" data-tabs="prospect-pools">
+    <div class="tabs" role="tablist" aria-label="Prospect category">
+      <button class="tab" type="button" role="tab" id="tab-no-website" aria-controls="no-website" aria-selected="true" data-tab="no-website">No website <span class="tab-count">{{ stats.no_website }}</span></button>
+      <button class="tab" type="button" role="tab" id="tab-audit-queue" aria-controls="audit-queue" aria-selected="false" data-tab="audit-queue">Website audit queue <span class="tab-count">{{ stats.website_audit }}</span></button>
     </div>
-    <div class="card-body p-0">
-        <div class="table-responsive">
-            <table class="table table-hover mb-0">
-                <thead class="table-light">
-                    <tr>
-                        <th>Type</th>
-                        <th>Location</th>
-                        <th>Radius</th>
-                        <th>Filters</th>
-                        <th>Status</th>
-                        <th>Prospects</th>
-                        <th>Started</th>
-                        <th></th>
-                    </tr>
-                </thead>
-                <tbody>
-                {% for s in searches %}
-                <tr>
-                    <td><strong>{{ s.search_type }}</strong></td>
-                    <td>{{ s.location_name }}</td>
-                    <td>{{ s.radius_km }} km</td>
-                    <td class="small">
-                        {{ '%.1f'|format(s.min_rating or 0) }}+ stars<br>
-                        {{ s.min_reviews or 0 }}+ reviews
-                    </td>
-                    <td>
-                        <span class="status-badge status-{{ s.status }}">{{ s.status }}</span>
-                    </td>
-                    <td><strong>{{ s.total_leads }}</strong></td>
-                    <td class="text-muted small">{{ (s.created_at or '')[:16] }}</td>
-                    <td class="text-nowrap">
-                        {% if s.status == 'running' %}
-                        <form method="POST"
-                              action="{{ url_for('search.cancel_search', search_id=s.id) }}"
-                              class="d-inline">
-                            <button class="btn btn-outline-danger btn-sm" type="submit">
-                                <i class="fas fa-stop me-1"></i>Cancel
-                            </button>
-                        </form>
-                        {% endif %}
-                        <a href="{{ url_for('results.search_detail', search_id=s.id) }}"
-                           class="btn btn-outline-secondary btn-sm">
-                            <i class="fas fa-eye me-1"></i>View
-                        </a>
-                    </td>
-                </tr>
-                {% else %}
-                <tr>
-                    <td colspan="8" class="text-center text-muted py-4">
-                        No searches yet. <a href="{{ url_for('search.index') }}">Start one ↗</a>
-                    </td>
-                </tr>
-                {% endfor %}
-                </tbody>
-            </table>
-        </div>
-    </div>
-</div>
-
-<div class="row g-4">
-    <div class="col-xl-6">
-        <div class="card h-100">
-            <div class="card-header py-3 d-flex justify-content-between align-items-center">
-                <span><i class="fas fa-plus-circle me-2 text-success"></i>No Website</span>
-                <span class="badge bg-success">{{ no_website_leads|length }} recent</span>
-            </div>
-            <div class="card-body p-0">
-                <div class="table-responsive">
-                    <table class="table table-hover mb-0">
-                        <thead class="table-light">
-                            <tr>
-                                <th>Business</th>
-                                <th>Rating</th>
-                                <th>Reviews</th>
-                                <th>Phone</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                        {% for l in no_website_leads %}
-                            <tr>
-                                <td>
-                                    <strong>{{ l.business_name }}</strong>
-                                    <br><small class="text-muted">{{ l.location_name }}</small>
-                                </td>
-                                <td>{{ '%.1f'|format(l.rating) if l.rating is not none else '—' }}</td>
-                                <td>{{ l.review_count or 0 }}</td>
-                                <td class="small">{{ l.phone_number or '—' }}</td>
-                            </tr>
-                        {% else %}
-                            <tr>
-                                <td colspan="4" class="text-center text-muted py-4">
-                                    No no-website prospects yet.
-                                </td>
-                            </tr>
-                        {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="col-xl-6">
-        <div class="card h-100">
-            <div class="card-header py-3 d-flex justify-content-between align-items-center">
-                <span><i class="fas fa-clipboard-check me-2 text-primary"></i>Website Audit Queue</span>
-                <span class="badge bg-primary">{{ website_leads|length }} recent</span>
-            </div>
-            <div class="card-body p-0">
-                <div class="table-responsive">
-                    <table class="table table-hover mb-0">
-                        <thead class="table-light">
-                            <tr>
-                                <th>Business</th>
-                                <th>Rating</th>
-                                <th>Reviews</th>
-                                <th>Audit</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                        {% for l in website_leads %}
-                            <tr>
-                                <td>
-                                    <strong>{{ l.business_name }}</strong><br>
-                                    <a href="{{ l.website_url }}" target="_blank" rel="noopener" class="small">
-                                        Open website <i class="fas fa-external-link-alt ms-1"></i>
-                                    </a>
-                                </td>
-                                <td>{{ '%.1f'|format(l.rating) if l.rating is not none else '—' }}</td>
-                                <td>{{ l.review_count or 0 }}</td>
-                                <td>
-                                    {% set condition = l.website_condition or 'UNREVIEWED' %}
-                                    {% if condition == 'SEVERE' %}
-                                        <span class="badge bg-danger">Severe</span>
-                                    {% elif condition == 'POOR' %}
-                                        <span class="badge bg-warning text-dark">Poor</span>
-                                    {% elif condition == 'AVERAGE' %}
-                                        <span class="badge bg-info text-dark">Average</span>
-                                    {% elif condition == 'GOOD' %}
-                                        <span class="badge bg-secondary">Good</span>
-                                    {% else %}
-                                        <span class="badge bg-light text-dark border">Unreviewed</span>
-                                    {% endif %}
-                                </td>
-                            </tr>
-                        {% else %}
-                            <tr>
-                                <td colspan="4" class="text-center text-muted py-4">
-                                    No website audit prospects yet.
-                                </td>
-                            </tr>
-                        {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
+    <input type="search" class="control filter-input" aria-label="Filter visible prospects" placeholder="Find a business…" data-active-pool-filter>
+  </div>
+  <div id="no-website" class="section-anchor" role="tabpanel" aria-labelledby="tab-no-website" data-tab-panel="no-website">
+    <div class="table-wrap"><table class="data-table" id="no-website-table">
+      <thead><tr><th>Business</th><th><button class="sort-btn" type="button" data-sort-table="no-website-table" data-sort-col="1" data-sort-type="number" aria-pressed="false">Rating ↕</button></th><th>Reviews</th><th>Phone</th><th>Action</th></tr></thead>
+      <tbody>
+      {% for l in no_website_leads %}
+      <tr>
+        <td><div class="business-name">{{ l.business_name }}</div><div class="business-sub">{{ l.location_name }}</div></td>
+        <td class="rating" data-sort-value="{{ l.rating or 0 }}"><i class="fa-solid fa-star" aria-hidden="true"></i> {{ '%.1f'|format(l.rating) if l.rating is not none else '—' }}</td>
+        <td class="mono">{{ l.review_count or 0 }}</td><td>{{ l.phone_number or '—' }}</td>
+        <td><div class="table-actions"><a href="{{ url_for('results.search_detail', search_id=l.search_id) }}#no-website">View search <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a></div></td>
+      </tr>
+      {% else %}
+      <tr class="static-empty"><td colspan="5"><div class="empty-state"><i class="fa-solid fa-globe" aria-hidden="true"></i><h3>No no-website prospects yet</h3><p>Run a discovery search to find businesses without a listed website.</p></div></td></tr>
+      {% endfor %}
+      </tbody>
+    </table></div><div class="no-rows" hidden data-no-rows-for="no-website-table">No matching businesses in this preview.</div>
+  </div>
+  <div id="audit-queue" class="section-anchor" role="tabpanel" aria-labelledby="tab-audit-queue" data-tab-panel="audit-queue" hidden>
+    <div class="table-wrap"><table class="data-table" id="audit-queue-table">
+      <thead><tr><th>Business</th><th>Rating</th><th>Reviews</th><th>Website review</th><th>Action</th></tr></thead><tbody>
+      {% for l in website_leads %}
+      <tr><td><div class="business-name">{{ l.business_name }}</div><div class="business-sub">{{ l.location_name }}</div></td>
+        <td class="rating"><i class="fa-solid fa-star" aria-hidden="true"></i> {{ '%.1f'|format(l.rating) if l.rating is not none else '—' }}</td>
+        <td class="mono">{{ l.review_count or 0 }}</td>
+        <td>{% set c = l.website_condition or 'UNREVIEWED' %}<span class="pill {% if c == 'SEVERE' %}pill-red{% elif c == 'POOR' or c == 'AVERAGE' %}pill-amber{% elif c == 'GOOD' %}pill-mint{% else %}pill-muted{% endif %}">{{ {'UNREVIEWED':'Unreviewed','SEVERE':'Severely poor','POOR':'Poor','AVERAGE':'Average / improvable','GOOD':'Good'}.get(c,'Unreviewed') }}</span></td>
+        <td><div class="table-actions"><a href="{{ url_for('results.search_detail', search_id=l.search_id) }}#audit-queue">Review <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a>{% if l.website_url and l.website_url.startswith('https://') or l.website_url and l.website_url.startswith('http://') %}<a href="{{ l.website_url }}" target="_blank" rel="noopener noreferrer">Site ↗</a>{% endif %}</div></td>
+      </tr>
+      {% else %}
+      <tr class="static-empty"><td colspan="5"><div class="empty-state"><i class="fa-solid fa-magnifying-glass-chart" aria-hidden="true"></i><h3>Your audit queue is empty</h3><p>Businesses with a listed website will appear here after discovery.</p></div></td></tr>
+      {% endfor %}
+      </tbody>
+    </table></div><div class="no-rows" data-no-rows-for="audit-queue-table" hidden>No matching businesses in this preview.</div>
+  </div>
+  <div class="count-footnote">Collections preview the 25 most recent entries in each pool. Totals above include all saved records. Open a search for its full prospect list.</div>
+</section>
 {% endblock %}
